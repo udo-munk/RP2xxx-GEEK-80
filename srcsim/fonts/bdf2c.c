@@ -164,8 +164,8 @@ int main(int argc, char *argv[])
 					if ((mc >>= 1) == 0) {
 						/* get next hex char */
 						c = *s++;
-						c = c - (c <= '9' ? '0'
-								  : 'A' - 10);
+						c -= (c <= '9' ? '0'
+							       : 'A' - 10);
 						mc = 0x8;
 					}
 					if (c & mc)

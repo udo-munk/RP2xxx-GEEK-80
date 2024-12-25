@@ -86,8 +86,6 @@ void init_disks(void)
 	sd_res = f_mount(&fs, "", 1);
 	if (sd_res != FR_OK)
 		panic("f_mount error: %s (%d)\n", FRESULT_str(sd_res), sd_res);
-
-	lcd_init_drives();
 }
 
 void exit_disks(void)

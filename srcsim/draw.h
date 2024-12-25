@@ -37,6 +37,7 @@
 #define C_DKYELLOW	0x0880
 #define C_GRAY		0x0888
 #define C_ORANGE	0x0fa0
+#define C_WHEAT		0x0edb
 #else
 /* 565 RGB colors */
 #define C_BLACK		0x0000
@@ -55,6 +56,7 @@
 #define C_DKYELLOW	0x4c40
 #define C_GRAY		0x8410
 #define C_ORANGE	0xfd20
+#define C_WHEAT		0xf6f6
 #endif
 
 /*
