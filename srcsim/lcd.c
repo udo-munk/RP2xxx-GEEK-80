@@ -776,7 +776,6 @@ void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
 }
 
 static void __not_in_flash_func(lcd_draw_drives)(bool first)
-
 {
 	char c;
 	int i, j;
