@@ -7,13 +7,17 @@
 #ifndef LCD_INC
 #define LCD_INC
 
+#include "sim.h"
+#include "simdefs.h"
+
 #include "lcd_dev.h"
 #include "draw.h"
 
 #define LCD_STATUS_CURRENT	0
 #define LCD_STATUS_REGISTERS	1
 #define LCD_STATUS_PANEL	2
-#define LCD_STATUS_MEMORY	3
+#define LCD_STATUS_DRIVES	3
+#define LCD_STATUS_MEMORY	4
 
 typedef void (*lcd_func_t)(bool first);
 
@@ -25,5 +29,8 @@ extern void lcd_custom_disp(lcd_func_t draw_func);
 extern void lcd_status_disp(int which);
 extern void lcd_status_next(void);
 extern void lcd_brightness(int brightness);
+extern void lcd_init_drives(void);
+extern void lcd_update_drive(int drive, int track, int sector, WORD addr,
+			     bool rdwr, bool active);
 
 #endif /* !LCD_INC */

@@ -17,6 +17,7 @@
 
 #include "lcd.h"
 #include "draw.h"
+#include "disks.h"
 #include "picosim.h"
 
 #if COLOR_DEPTH == 12
@@ -46,10 +47,11 @@ static bool lcd_task_done;
 static void lcd_task(void);
 static void lcd_draw_empty(bool first);
 static void lcd_draw_cpu_reg(bool first);
-static void lcd_draw_memory(bool first);
 #ifdef SIMPLEPANEL
 static void lcd_draw_panel(bool first);
 #endif
+static void lcd_draw_memory(bool first);
+static void lcd_draw_drives(bool first);
 
 uint16_t led_color;	/* color of RGB LED */
 
@@ -167,6 +169,9 @@ void lcd_status_disp(int which)
 		lcd_status_func = lcd_draw_panel;
 		break;
 #endif
+	case LCD_STATUS_DRIVES:
+		lcd_status_func = lcd_draw_drives;
+		break;
 	case LCD_STATUS_CURRENT:
 	default:
 		break;
@@ -183,6 +188,8 @@ void lcd_status_next(void)
 		lcd_status_func = lcd_draw_panel;
 	else if (lcd_status_func == lcd_draw_panel)
 #endif
+		lcd_status_func = lcd_draw_drives;
+	else if (lcd_status_func == lcd_draw_drives)
 		lcd_status_func = lcd_draw_memory;
 	else
 		lcd_status_func = lcd_draw_cpu_reg;
@@ -233,7 +240,8 @@ static void __not_in_flash_func(lcd_info_first)(void)
 		  C_DKBLUE);
 
 	/* draw the RGB LED bracket */
-	draw_led_bracket(14 * font20.width + IXOFF, y + 5);
+	draw_led_bracket(14 * font20.width + IXOFF,
+			 y + (font20.height - 10) / 2);
 
 	temp_refresh = LCD_REFRESH - 1; /* force temperature update */
 }
@@ -265,7 +273,8 @@ static void __not_in_flash_func(lcd_info_update)(void)
 	}
 
 	/* update the RGB LED */
-	draw_led(14 * font20.width + IXOFF, y + 5, led_color);
+	draw_led(14 * font20.width + IXOFF, y + (font20.height - 10) / 2,
+		 led_color);
 }
 
 /*
@@ -274,18 +283,18 @@ static void __not_in_flash_func(lcd_info_update)(void)
  *	Z80 CPU using font20 (10 x 20 pixels):
  *
  *	  01234567890123456789012
- *	0 A  12   BC 1234 DE 1234
- *	1 HL 1234 SP 1234 PC 1234
- *	2 IX 1234 IY 1234 AF'1234
- *	3 BC'1234 DE'1234 HL'1234
- *	4 F  SZHPNC  IF12 IR 1234
+ *	0 A  xx   BC xxxx DE xxxx
+ *	1 HL xxxx SP xxxx PC xxxx
+ *	2 IX xxxx IY xxxx AF'xxxx
+ *	3 BC'xxxx DE'xxxx HL'xxxx
+ *	4 F  SZHPNC  IF12 IR xxxx
  *
  *	8080 CPU using font28 (14 x 28 pixels):
  *
  *	  0123456789012345
- *	0 A  12    BC 1234
- *	1 DE 1234  HL 1234
- *	2 SP 1234  PC 1234
+ *	0 A  xx    BC xxxx
+ *	1 DE xxxx  HL xxxx
+ *	2 SP xxxx  PC xxxx
  *	3 F  SZHPC    IF 1
  */
 
@@ -312,7 +321,7 @@ typedef struct reg {
 
 #define XOFF20	5	/* x pixel offset of text grid for font20 */
 #define YOFF20	0	/* y pixel offset of text grid for font20 */
-#define SPC20	3	/* vertical spacing for font20 */
+#define SPC20	3	/* vertical text spacing for font20 */
 
 static const reg_t __not_in_flash("lcd_tables") regs_z80[] = {
 	{  4, 0, RB, "A",    .b.p = &A },
@@ -353,7 +362,7 @@ static const int num_regs_z80 = sizeof(regs_z80) / sizeof(reg_t);
 
 #define XOFF28	8	/* x pixel offset of text grid for font28 */
 #define YOFF28	0	/* y pixel offset of text grid for font28 */
-#define SPC28	1	/* vertical spacing for font28 */
+#define SPC28	1	/* vertical text spacing for font28 */
 
 static const reg_t __not_in_flash("lcd_tables") regs_8080[] = {
 	{  4, 0, RB, "A",  .b.p = &A },
@@ -493,7 +502,7 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 			x = rp->x;
 			while (j--) {
 				c = w & 0xf;
-				c += c < 10 ? '0' : 'A' - 10;
+				c += (c < 10 ? '0' : 'A' - 10);
 				draw_grid_char(x--, rp->y, c, &grid, C_GREEN,
 					       C_DKBLUE);
 				w >>= 4;
@@ -505,9 +514,17 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 	}
 }
 
-#define MEM_XOFF 3
-#define MEM_YOFF 0
-#define MEM_BRDR 3
+/*
+ *	Memory contents display:
+ *
+ *	Displays the contents of the 64K and 48K memory banks in
+ *	one 128x128 and one 128x96 pixel block by combining 4 memory
+ *	bytes into one 12/16-bit color pixel with a magic formula.
+ */
+
+#define MEM_XOFF 3	/* memory display x offset */
+#define MEM_YOFF 0	/* memory display y offset */
+#define MEM_BRDR 3	/* free space around and between pixel blocks */
 
 static void __not_in_flash_func(lcd_draw_memory)(bool first)
 {
@@ -534,7 +551,11 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 			for (y = MEM_YOFF + MEM_BRDR;
 			     y < MEM_YOFF + MEM_BRDR + 128; y++) {
 				/* constant = 2^32 / ((1 + sqrt(5)) / 2) */
+#if COLOR_DEPTH == 12
 				draw_pixel(x, y, (*p++ * 2654435769U) >> 20);
+#else
+				draw_pixel(x, y, (*p++ * 2654435769U) >> 16);
+#endif
 			}
 		}
 		p = (uint32_t *) bnk1;
@@ -542,13 +563,36 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 		     x < MEM_XOFF + 3 * MEM_BRDR - 1 + 128 + 96; x++) {
 			for (y = MEM_YOFF + MEM_BRDR;
 			     y < MEM_YOFF + MEM_BRDR + 128; y++) {
+#if COLOR_DEPTH == 12
 				draw_pixel(x, y, (*p++ * 2654435769U) >> 20);
+#else
+				draw_pixel(x, y, (*p++ * 2654435769U) >> 16);
+#endif
 			}
 		}
 	}
 }
 
 #ifdef SIMPLEPANEL
+
+/*
+ *	Classic front panel display:
+ *
+ *	P0 P1 P2 P3 P4 P5 P6 P7              IE RU WA HO
+ *      () () () () () () () ()              () () () ()
+ *                        __
+ *	MR IP M1 OP HA ST WO IA  D7 D6 D5 D4 D3 D2 D1 D0
+ *	() () () () () () () ()  () () () () () () () ()
+ *
+ *	15 14 13 12 11 10 A9 A8  A7 A6 A5 A4 A3 A2 A1 A0
+ *	() () () () () () () ()  () () () () () () () ()
+ *
+ *
+ *	Doesn't work as nicely as the Z80pack desktop frontpanel,
+ *	which calculates a light intensity based on the percentage
+ *	a LED is on during a panel refresh cycle, but computing
+ *	resources are more limited on microcontrollers.
+ */
 
 #define PXOFF	6				/* panel x offset */
 #define PYOFF	6				/* panel y offset */
@@ -681,3 +725,141 @@ static void __not_in_flash_func(lcd_draw_panel)(bool first)
 }
 
 #endif /* SIMPLEPANEL */
+
+/*
+ *	Diskette drives display using font28 (14 x 28 pixels):
+ *
+ *	  0123456789012345
+ *	0 A oTxx Sxx Dxxxx
+ *	1 B oTxx Sxx Dxxxx
+ *	2 C oTxx Sxx Dxxxx
+ *	3 D oTxx Sxx Dxxxx
+ *
+ *	Show continous access LED, track, sector, and DMA address
+ *	of disk drive operations.
+ */
+
+#define DXOFF	8	/* x pixel offset of text grid */
+#define DYOFF	0	/* y pixel offset of text grid */
+#define DSPC	1	/* vertical text spacing */
+
+typedef struct lcd_drive {
+	uint8_t track;
+	uint8_t sector;
+	WORD addr;
+	bool rdwr;
+	bool active;
+} lcd_drive_t;
+
+static lcd_drive_t lcd_drives[NUMDISK];
+
+void lcd_init_drives(void)
+{
+	lcd_drive_t *p = lcd_drives;
+	int i;
+
+	for (i = 0; i < NUMDISK; i++) {
+		p->track = 0;
+		p->sector = 1;
+		p->addr = 0;
+		p->rdwr = false;
+		p->active = false;
+		p++;
+	}
+}
+
+void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
+		      bool active)
+{
+	lcd_drive_t *p = &lcd_drives[drive];
+
+	p->track = track;
+	p->sector = sector;
+	p->addr = addr;
+	p->rdwr = rdwr;
+	p->active = active;
+
+	if (p->active) {
+		if (p->rdwr)
+			led_color = (led_color & ~C_RED) | C_RED;
+		else
+			led_color = (led_color & ~C_GREEN) | C_GREEN;
+	} else
+		led_color &= ~(C_RED | C_GREEN);
+}
+
+static void __not_in_flash_func(lcd_draw_drives)(bool first)
+
+{
+	char c;
+	int i, j;
+	WORD w;
+	lcd_drive_t *p;
+	static draw_grid_t grid;
+
+	if (first) {
+		/* draw static content */
+		draw_clear(C_DKBLUE);
+
+		draw_setup_grid(&grid, DXOFF, DYOFF, -1, 4, &font28, DSPC);
+		for (i = 0; i < NUMDISK; i++) {
+			draw_grid_char(0, i, 'A' + i, &grid, C_CYAN,
+				       C_DKBLUE);
+			draw_led_bracket(grid.cwidth +
+					 (2 * grid.cwidth - 10) / 2 +
+					 grid.xoff,
+					 i * grid.cheight +
+					 (grid.cheight - grid.spc - 10) / 2 +
+					 grid.yoff);
+			draw_char(3 * grid.cwidth + grid.xoff,
+				  i * grid.cheight + grid.yoff +
+				  font28.height - font20.height - 2,
+				  'T', &font20, C_GREEN, C_DKBLUE);
+			draw_char(7 * grid.cwidth + grid.xoff,
+				  i * grid.cheight + grid.yoff +
+				  font28.height - font20.height - 2,
+				  'S', &font20, C_GREEN, C_DKBLUE);
+			draw_char(11 * grid.cwidth + grid.xoff,
+				  i * grid.cheight + grid.yoff +
+				  font28.height - font20.height - 2,
+				  'D', &font20, C_GREEN, C_DKBLUE);
+			if (i)
+				draw_grid_hline(0, i, grid.cols, &grid,
+						C_DKYELLOW);
+		}
+
+		lcd_info_first();
+     } else {
+		/* draw dynamic content */
+		p = lcd_drives;
+		for (i = 0; i < NUMDISK; i++) {
+			draw_led(grid.cwidth +
+				 (2 * grid.cwidth - 10) / 2 +
+				 grid.xoff,
+				 i * grid.cheight +
+				 (grid.cheight - grid.spc - 10) / 2 +
+				 grid.yoff,
+				 p->active ? (p->rdwr ? C_RED : C_GREEN)
+					   : C_DKRED);
+			draw_grid_char(4, i, '0' + p->track / 10,
+				       &grid, C_YELLOW, C_DKBLUE);
+			draw_grid_char(5, i, '0' + p->track % 10,
+				       &grid, C_YELLOW, C_DKBLUE);
+			draw_grid_char(8, i, '0' + p->sector / 10,
+				       &grid, C_YELLOW, C_DKBLUE);
+			draw_grid_char(9, i, '0' + p->sector % 10,
+				       &grid, C_YELLOW, C_DKBLUE);
+			w = p->addr;
+			for (j = 0; j < 4; j++) {
+				c = w & 0xf;
+				c += (c < 10 ? '0' : 'A' - 10);
+				draw_grid_char(15 - j, i, c, &grid, C_YELLOW,
+					       C_DKBLUE);
+				w >>= 4;
+			}
+			p++;
+		}
+
+		lcd_info_update();
+     }
+}

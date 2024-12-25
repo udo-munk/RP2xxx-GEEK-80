@@ -86,6 +86,8 @@ void init_disks(void)
 	sd_res = f_mount(&fs, "", 1);
 	if (sd_res != FR_OK)
 		panic("f_mount error: %s (%d)\n", FRESULT_str(sd_res), sd_res);
+
+	lcd_init_drives();
 }
 
 void exit_disks(void)
@@ -226,7 +228,7 @@ void mount_disk(int drive, const char *name)
 /*
  * prepare I/O for sector read and write routines
  */
-static BYTE prep_io(int drive, int track, int sector, WORD addr)
+static BYTE prep_io(int drive, int track, int sector, WORD addr, bool rdwr)
 {
 	FSIZE_t pos;
 
@@ -249,8 +251,10 @@ static BYTE prep_io(int drive, int track, int sector, WORD addr)
 		return FDC_STAT_NODISK;
 	}
 
+	lcd_update_drive(drive, track, sector, addr, rdwr, true);
+
 	/* open file with the disk image */
-	sd_res = f_open(&sd_file, disks[drive], FA_READ | FA_WRITE);
+	sd_res = f_open(&sd_file, disks[drive], rdwr ? FA_WRITE : FA_READ);
 	if (sd_res != FR_OK)
 		return FDC_STAT_NODISK;
 
@@ -260,6 +264,7 @@ static BYTE prep_io(int drive, int track, int sector, WORD addr)
 		f_close(&sd_file);
 		return FDC_STAT_SEEK;
 	}
+
 	return FDC_STAT_OK;
 }
 
@@ -272,10 +277,9 @@ BYTE read_sec(int drive, int track, int sector, WORD addr)
 	unsigned int br;
 	register int i;
 
-	led_color = (led_color & ~C_GREEN) | C_GREEN;
-
 	/* prepare for sector read */
-	if ((stat = prep_io(drive, track, sector, addr)) == FDC_STAT_OK) {
+	stat = prep_io(drive, track, sector, addr, false);
+	if (stat == FDC_STAT_OK) {
 
 		/* read sector into memory */
 		sd_res = f_read(&sd_file, &dsk_buf[0], SEC_SZ, &br);
@@ -293,7 +297,7 @@ BYTE read_sec(int drive, int track, int sector, WORD addr)
 		f_close(&sd_file);
 	}
 
-	led_color &= ~C_GREEN;
+	lcd_update_drive(drive, track, sector, addr, false, false);
 
 	return stat;
 }
@@ -307,10 +311,9 @@ BYTE write_sec(int drive, int track, int sector, WORD addr)
 	unsigned int br;
 	register int i;
 
-	led_color = (led_color & ~C_RED) | C_RED;
-
 	/* prepare for sector write */
-	if ((stat = prep_io(drive, track, sector, addr)) == FDC_STAT_OK) {
+	stat = prep_io(drive, track, sector, addr, true);
+	if (stat== FDC_STAT_OK) {
 
 		/* write sector to disk image */
 		for (i = 0; i < SEC_SZ; i++)
@@ -327,7 +330,7 @@ BYTE write_sec(int drive, int track, int sector, WORD addr)
 		f_close(&sd_file);
 	}
 
-	led_color &= ~C_RED;
+	lcd_update_drive(drive, track, sector, addr, true, false);
 
 	return stat;
 }
