@@ -43,8 +43,9 @@ operating systems:
 All implemented operating systems use 8080 instructions only, so it is
 possible to switch CPU's anytime, even 'on the fly'.
 
-The LCD can show several stati of the virtual machine, displays are switched
-with a CP/M program:
+The LCD can show several stati of the virtual machine, the initial
+shown display can be set in the configuration. Also the displays
+can be switched in the running system with a CP/M program:
 
 - Z80 or 8080 registers
 - frontpanel like IMSAI 8080 with the output LED's
