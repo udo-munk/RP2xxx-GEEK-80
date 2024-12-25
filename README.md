@@ -48,6 +48,7 @@ with a CP/M program:
 
 - Z80 or 8080 registers
 - frontpanel like IMSAI 8080 with the output LED's
+- status of the disks subsystem
 - memory contents
 
 And of course Cromemco Dazzler.
