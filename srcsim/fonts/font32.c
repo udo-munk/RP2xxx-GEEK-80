@@ -1,5 +1,5 @@
 /*
- * Converted from ter-u32b.bdf variant td1
+ * Automatically generated from ter-u32b.bdf with bdf2c
  * ASCII subset of Terminus Bold 32
  *
  * Copyright (C) 2020 Dimitar Toshkov Zhekov

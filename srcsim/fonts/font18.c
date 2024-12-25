@@ -1,5 +1,5 @@
 /*
- * Converted from ter-u18b.bdf variant td1
+ * Automatically generated from ter-u18b.bdf with bdf2c
  * ASCII subset of Terminus Bold 18
  *
  * Copyright (C) 2020 Dimitar Toshkov Zhekov

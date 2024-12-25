@@ -1,5 +1,5 @@
 /*
- * Converted from ter-u16b.bdf variant td1
+ * Automatically generated from ter-u16b.bdf with bdf2c
  * ASCII subset of Terminus Bold 16
  *
  * Copyright (C) 2020 Dimitar Toshkov Zhekov
