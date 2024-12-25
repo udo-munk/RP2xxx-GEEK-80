@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 			       &bboxw, &bboxh, &bboxl, &bboxb);
 		} else if (!strcmp(token, "BITMAP") && ch < NUMCHARS) {
 			off = ch * bboxw;
-			p = p0 = bitmap + (off >> 3);
+			p0 = bitmap + (off >> 3);
 			m0 = 0x80 >> (off & 7);
 			for (j = 0; j < bboxh; j++) {
 				m = m0;
