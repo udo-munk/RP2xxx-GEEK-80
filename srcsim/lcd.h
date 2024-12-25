@@ -29,7 +29,6 @@ extern void lcd_custom_disp(lcd_func_t draw_func);
 extern void lcd_status_disp(int which);
 extern void lcd_status_next(void);
 extern void lcd_brightness(int brightness);
-extern void lcd_init_drives(void);
 extern void lcd_update_drive(int drive, int track, int sector, WORD addr,
 			     bool rdwr, bool active);
 

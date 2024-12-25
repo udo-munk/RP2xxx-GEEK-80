@@ -730,13 +730,13 @@ static void __not_in_flash_func(lcd_draw_panel)(bool first)
  *	Diskette drives display using font28 (14 x 28 pixels):
  *
  *	  0123456789012345
- *	0 A oTxx Sxx Dxxxx
- *	1 B oTxx Sxx Dxxxx
- *	2 C oTxx Sxx Dxxxx
- *	3 D oTxx Sxx Dxxxx
+ *	0 A oTxx Sxx Axxxx
+ *	1 B oTxx Sxx Axxxx
+ *	2 C oTxx Sxx Axxxx
+ *	3 D oTxx Sxx Axxxx
  *
- *	Show continous access LED, track, sector, and DMA address
- *	of disk drive operations.
+ *	Shows last access type LED, track, sector, and DMA address
+ *	of disk drive operations. Clears after 10 seconds of no access.
  */
 
 #define DXOFF	8	/* x pixel offset of text grid */
@@ -744,29 +744,15 @@ static void __not_in_flash_func(lcd_draw_panel)(bool first)
 #define DSPC	1	/* vertical text spacing */
 
 typedef struct lcd_drive {
-	uint8_t track;
-	uint8_t sector;
-	WORD addr;
-	bool rdwr;
-	bool active;
+	uint8_t track;	/* track */
+	uint8_t sector;	/* sector, non-zero indicates drive in use */
+	WORD addr;	/* DMA address */
+	bool rdwr;	/* false = READ, true = WRITE */
+	bool active;	/* used for access LED in info line */
+	uint32_t lastacc;
 } lcd_drive_t;
 
 static lcd_drive_t lcd_drives[NUMDISK];
-
-void lcd_init_drives(void)
-{
-	lcd_drive_t *p = lcd_drives;
-	int i;
-
-	for (i = 0; i < NUMDISK; i++) {
-		p->track = 0;
-		p->sector = 0;
-		p->addr = 0;
-		p->rdwr = false;
-		p->active = false;
-		p++;
-	}
-}
 
 void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
 		      bool active)
@@ -778,6 +764,7 @@ void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
 	p->addr = addr;
 	p->rdwr = rdwr;
 	p->active = active;
+	p->lastacc = 0;
 
 	if (p->active) {
 		if (p->rdwr)
@@ -794,6 +781,7 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 	char c;
 	int i, j;
 	WORD w;
+	bool clr;
 	lcd_drive_t *p;
 	static draw_grid_t grid;
 
@@ -814,15 +802,15 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 			draw_char(3 * grid.cwidth + grid.xoff,
 				  i * grid.cheight + grid.yoff +
 				  font28.height - font20.height - 2,
-				  'T', &font20, C_GREEN, C_DKBLUE);
+				  'T', &font20, C_WHEAT, C_DKBLUE);
 			draw_char(7 * grid.cwidth + grid.xoff,
 				  i * grid.cheight + grid.yoff +
 				  font28.height - font20.height - 2,
-				  'S', &font20, C_GREEN, C_DKBLUE);
+				  'S', &font20, C_WHEAT, C_DKBLUE);
 			draw_char(11 * grid.cwidth + grid.xoff,
 				  i * grid.cheight + grid.yoff +
 				  font28.height - font20.height - 2,
-				  'D', &font20, C_GREEN, C_DKBLUE);
+				  'A', &font20, C_WHEAT, C_DKBLUE);
 			if (i)
 				draw_grid_hline(0, i, grid.cols, &grid,
 						C_DKYELLOW);
@@ -833,28 +821,40 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 		/* draw dynamic content */
 		p = lcd_drives;
 		for (i = 0; i < NUMDISK; i++) {
-			if (p->sector) {
+			clr = false;
+			if (++p->lastacc >= 10 * LCD_REFRESH) {
+				p->lastacc = 0;
+				p->sector = 0;
+				clr = true;
+			}
+			if (p->sector || clr) {
 				draw_led(grid.cwidth +
 					 (2 * grid.cwidth - 10) / 2 +
 					 grid.xoff,
 					 i * grid.cheight +
 					 (grid.cheight - grid.spc - 10) / 2 +
 					 grid.yoff,
-					 p->rdwr ? C_RED : C_GREEN);
-				draw_grid_char(4, i, '0' + p->track / 10,
+					 clr ? C_DKBLUE
+					     : (p->rdwr ? C_RED : C_GREEN));
+				draw_grid_char(4, i,
+					       clr ? ' ' : '0' + p->track / 10,
 					       &grid, C_YELLOW, C_DKBLUE);
-				draw_grid_char(5, i, '0' + p->track % 10,
+				draw_grid_char(5, i,
+					       clr ? ' ' : '0' + p->track % 10,
 					       &grid, C_YELLOW, C_DKBLUE);
-				draw_grid_char(8, i, '0' + p->sector / 10,
+				draw_grid_char(8, i,
+					       clr ? ' ' : '0' + p->sector / 10,
 					       &grid, C_YELLOW, C_DKBLUE);
-				draw_grid_char(9, i, '0' + p->sector % 10,
+				draw_grid_char(9, i,
+					       clr ? ' ' : '0' + p->sector % 10,
 					       &grid, C_YELLOW, C_DKBLUE);
 				w = p->addr;
 				for (j = 0; j < 4; j++) {
 					c = w & 0xf;
 					c += (c < 10 ? '0' : 'A' - 10);
-					draw_grid_char(15 - j, i, c, &grid,
-						       C_YELLOW, C_DKBLUE);
+					draw_grid_char(15 - j, i, clr ? ' ' : c,
+						       &grid, C_YELLOW,
+						       C_DKBLUE);
 					w >>= 4;
 				}
 			}

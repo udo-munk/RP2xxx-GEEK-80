@@ -86,8 +86,6 @@ void init_disks(void)
 	sd_res = f_mount(&fs, "", 1);
 	if (sd_res != FR_OK)
 		panic("f_mount error: %s (%d)\n", FRESULT_str(sd_res), sd_res);
-
-	lcd_init_drives();
 }
 
 void exit_disks(void)
@@ -313,7 +311,7 @@ BYTE write_sec(int drive, int track, int sector, WORD addr)
 
 	/* prepare for sector write */
 	stat = prep_io(drive, track, sector, addr, true);
-	if (stat== FDC_STAT_OK) {
+	if (stat == FDC_STAT_OK) {
 
 		/* write sector to disk image */
 		for (i = 0; i < SEC_SZ; i++)
