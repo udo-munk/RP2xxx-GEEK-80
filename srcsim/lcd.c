@@ -760,7 +760,7 @@ void lcd_init_drives(void)
 
 	for (i = 0; i < NUMDISK; i++) {
 		p->track = 0;
-		p->sector = 1;
+		p->sector = 0;
 		p->addr = 0;
 		p->rdwr = false;
 		p->active = false;
@@ -833,29 +833,30 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 		/* draw dynamic content */
 		p = lcd_drives;
 		for (i = 0; i < NUMDISK; i++) {
-			draw_led(grid.cwidth +
-				 (2 * grid.cwidth - 10) / 2 +
-				 grid.xoff,
-				 i * grid.cheight +
-				 (grid.cheight - grid.spc - 10) / 2 +
-				 grid.yoff,
-				 p->active ? (p->rdwr ? C_RED : C_GREEN)
-					   : C_DKRED);
-			draw_grid_char(4, i, '0' + p->track / 10,
-				       &grid, C_YELLOW, C_DKBLUE);
-			draw_grid_char(5, i, '0' + p->track % 10,
-				       &grid, C_YELLOW, C_DKBLUE);
-			draw_grid_char(8, i, '0' + p->sector / 10,
-				       &grid, C_YELLOW, C_DKBLUE);
-			draw_grid_char(9, i, '0' + p->sector % 10,
-				       &grid, C_YELLOW, C_DKBLUE);
-			w = p->addr;
-			for (j = 0; j < 4; j++) {
-				c = w & 0xf;
-				c += (c < 10 ? '0' : 'A' - 10);
-				draw_grid_char(15 - j, i, c, &grid, C_YELLOW,
-					       C_DKBLUE);
-				w >>= 4;
+			if (p->sector) {
+				draw_led(grid.cwidth +
+					 (2 * grid.cwidth - 10) / 2 +
+					 grid.xoff,
+					 i * grid.cheight +
+					 (grid.cheight - grid.spc - 10) / 2 +
+					 grid.yoff,
+					 p->rdwr ? C_RED : C_GREEN);
+				draw_grid_char(4, i, '0' + p->track / 10,
+					       &grid, C_YELLOW, C_DKBLUE);
+				draw_grid_char(5, i, '0' + p->track % 10,
+					       &grid, C_YELLOW, C_DKBLUE);
+				draw_grid_char(8, i, '0' + p->sector / 10,
+					       &grid, C_YELLOW, C_DKBLUE);
+				draw_grid_char(9, i, '0' + p->sector % 10,
+					       &grid, C_YELLOW, C_DKBLUE);
+				w = p->addr;
+				for (j = 0; j < 4; j++) {
+					c = w & 0xf;
+					c += (c < 10 ? '0' : 'A' - 10);
+					draw_grid_char(15 - j, i, c, &grid,
+						       C_YELLOW, C_DKBLUE);
+					w >>= 4;
+				}
 			}
 			p++;
 		}
