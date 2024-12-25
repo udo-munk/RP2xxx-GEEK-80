@@ -1,5 +1,5 @@
 /*
- * Converted from ter-u22b.bdf variant td1
+ * Automatically generated from ter-u22b.bdf with bdf2c
  * ASCII subset of Terminus Bold 22
  *
  * Copyright (C) 2020 Dimitar Toshkov Zhekov

@@ -130,6 +130,7 @@ void config(void)
 #ifdef SIMPLEPANEL
 		case LCD_STATUS_PANEL:
 #endif
+		case LCD_STATUS_DRIVES:
 		case LCD_STATUS_MEMORY:
 			break;
 		default:
@@ -182,16 +183,19 @@ void config(void)
 			printf("m - rotate LCD\n");
 			printf("l - LCD status display: ");
 			switch (initial_lcd) {
-			case LCD_STATUS_MEMORY:
-				printf("memory pixmap\n");
+			case LCD_STATUS_REGISTERS:
+				printf("CPU registers\n");
 				break;
 #ifdef SIMPLEPANEL
 			case LCD_STATUS_PANEL:
 				printf("classic front panel\n");
 				break;
 #endif
-			case LCD_STATUS_REGISTERS:
-				printf("CPU registers\n");
+			case LCD_STATUS_DRIVES:
+				printf("floppy diskette drives\n");
+				break;
+			case LCD_STATUS_MEMORY:
+				printf("memory contents\n");
 				break;
 			default:
 				printf("unknown!\n");
@@ -251,6 +255,8 @@ void config(void)
 				initial_lcd = LCD_STATUS_PANEL;
 			else if (initial_lcd == LCD_STATUS_PANEL)
 #endif
+				initial_lcd = LCD_STATUS_DRIVES;
+			else if (initial_lcd == LCD_STATUS_DRIVES)
 				initial_lcd = LCD_STATUS_MEMORY;
 			else
 				initial_lcd = LCD_STATUS_REGISTERS;

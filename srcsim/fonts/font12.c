@@ -1,5 +1,5 @@
 /*
- * Converted from ter-u12n.bdf variant td1
+ * Automatically generated from ter-u12n.bdf with bdf2c
  * ASCII subset of Terminus Medium 12
  *
  * Copyright (C) 2020 Dimitar Toshkov Zhekov
