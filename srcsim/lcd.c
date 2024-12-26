@@ -776,7 +776,6 @@ void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
 }
 
 static void __not_in_flash_func(lcd_draw_drives)(bool first)
-
 {
 	char c;
 	int i, j;
@@ -785,12 +784,15 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 	lcd_drive_t *p;
 	static draw_grid_t grid;
 
+	p = lcd_drives;
 	if (first) {
 		/* draw static content */
 		draw_clear(C_DKBLUE);
 
 		draw_setup_grid(&grid, DXOFF, DYOFF, -1, 4, &font28, DSPC);
 		for (i = 0; i < NUMDISK; i++) {
+			p->lastacc = 0;
+			p->sector = 0;
 			draw_grid_char(0, i, 'A' + i, &grid, C_CYAN,
 				       C_DKBLUE);
 			draw_led_bracket(grid.cwidth +
@@ -814,12 +816,12 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 			if (i)
 				draw_grid_hline(0, i, grid.cols, &grid,
 						C_DKYELLOW);
+			p++;
 		}
 
 		lcd_info_first();
      } else {
 		/* draw dynamic content */
-		p = lcd_drives;
 		for (i = 0; i < NUMDISK; i++) {
 			clr = false;
 			if (++p->lastacc >= 10 * LCD_REFRESH) {
