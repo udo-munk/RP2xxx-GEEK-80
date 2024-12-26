@@ -142,11 +142,9 @@ void config(void)
 	ds3231_init(i2c_default, PICO_DEFAULT_I2C_SDA_PIN,
 		    PICO_DEFAULT_I2C_SCL_PIN, &rtc);
 
-	/* Try to read the DS3231 RTC status register */
-	buf = DS3231_STATUS_REG;
-	i2c_write_blocking(rtc.i2c_port, rtc.i2c_addr, &buf, 1, true);
-	if (i2c_read_blocking(rtc.i2c_port, rtc.i2c_addr,
-			      &buf, 1, false) == 1) {
+	/* Use a dummy read to see if a DS3231 RTC is present */
+	if (i2c_read_blocking(rtc.i2c_port, rtc.i2c_addr, &buf, 1,
+			      false) >= 0) {
 		puts("DS3231 RTC present, using it for setting the clock\n");
 		/* Read the date and time from the DS3231 RTC */
 		ds3231_get_datetime(&dt, &rtc);
