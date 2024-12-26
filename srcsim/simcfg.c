@@ -147,6 +147,7 @@ void config(void)
 	i2c_write_blocking(rtc.i2c_port, rtc.i2c_addr, &buf, 1, true);
 	if (i2c_read_blocking(rtc.i2c_port, rtc.i2c_addr,
 			      &buf, 1, false) == 1) {
+		puts("DS3231 RTC present, using it for setting the clock\n");
 		/* Read the date and time from the DS3231 RTC */
 		ds3231_get_datetime(&dt, &rtc);
 		t.tm_year = dt.year - 1900;
