@@ -38,11 +38,17 @@ static draw_pixmap_t lcd_pixmap = {
 	.stride = STRIDE
 };
 
-static mutex_t lcd_mutex;
-static lcd_func_t lcd_draw_func;
-static lcd_func_t lcd_status_func;
-static bool lcd_shows_status;
-static bool lcd_task_done;
+/* core 0 & 1 (R0 means read by core 0 etc. after multicore_launch_core1() */
+static volatile lcd_func_t lcd_draw_func; /* current LCD draw func (W0 R1) */
+static volatile uint8_t lcd_backlight;	/* LCD backlight intensity (W0 R1) */
+static volatile bool lcd_rotated;	/* LCD rotation status (W0 R1) */
+static volatile bool lcd_task_done;	/* core 1 LCD task finished (R0 W1) */
+static volatile uint16_t lcd_led_color;	/* RGB LED color (W0, R1) */
+
+static lcd_func_t lcd_status_func;	/* current LCD status panel */
+static bool lcd_shows_status;		/* LCD shows status panel */
+
+static uint32_t lcd_frame_cnt;		/* Frame counter (>2 yrs @ 60 Hz) */
 
 static void lcd_task(void);
 static void lcd_draw_empty(bool first);
@@ -53,17 +59,22 @@ static void lcd_draw_panel(bool first);
 static void lcd_draw_memory(bool first);
 static void lcd_draw_drives(bool first);
 
-uint16_t led_color;	/* color of RGB LED */
+uint16_t led_color;			/* RGB LED color (core 0) */
 
 void lcd_init(void)
 {
-	mutex_init(&lcd_mutex);
-
-	lcd_status_func = lcd_draw_cpu_reg;
 	lcd_draw_func = lcd_draw_empty;
+	lcd_backlight = 90;
+	lcd_rotated = false;
+	lcd_led_color = C_BLACK;
 	lcd_task_done = false;
 
-	led_color = 0;
+	lcd_status_func = lcd_draw_cpu_reg;
+	lcd_shows_status = false;
+
+	lcd_frame_cnt = 0;
+
+	led_color = lcd_led_color;
 
 	draw_set_pixmap(&lcd_pixmap);
 
@@ -89,30 +100,54 @@ void lcd_exit(void)
 static void __not_in_flash_func(lcd_task)(void)
 {
 	absolute_time_t t;
-	bool first = true;
 	int64_t d;
-	lcd_func_t curr_func = NULL;
+	bool first, rotated, new_rotated;
+	uint8_t backlight, new_backlight;
+	lcd_func_t draw_func, new_draw_func;
 
 	/* initialize the LCD controller */
-	lcd_dev_init();
+	lcd_dev_init(lcd_backlight);
+	backlight = lcd_backlight;
+	rotated = false;
+	draw_func = NULL;
+	first = true;
 
 	while (1) {
 		/* loops every LCD_REFRESH_US */
 
 		t = get_absolute_time();
 
+		/* check for request to exit task */
 		if (lcd_draw_func == NULL)
 			break;
 
-		if (curr_func != lcd_draw_func) {
-			curr_func = lcd_draw_func;
+		/* check if backlight changed */
+		new_backlight = lcd_backlight;
+		if (new_backlight != backlight) {
+			backlight = new_backlight;
+			lcd_dev_backlight(backlight);
+		}
+
+		/* check if rotation changed */
+		new_rotated = lcd_rotated;
+		if (new_rotated != rotated) {
+			rotated = new_rotated;
+			lcd_dev_rotation(rotated);
+		}
+
+		/* check if drawing function changed */
+		new_draw_func = lcd_draw_func;
+		if (new_draw_func != draw_func) {
+			draw_func = lcd_draw_func;
 			first = true;
 		}
-		(*curr_func)(first);
+
+		/* call drawing function and send pixmap to LCD */
+		(*draw_func)(first);
 		first = false;
-		mutex_enter_blocking(&lcd_mutex);
 		lcd_dev_send_pixmap(draw_pixmap);
-		mutex_exit(&lcd_mutex);
+
+		lcd_frame_cnt++;
 
 		d = absolute_time_diff_us(t, get_absolute_time());
 		// printf("SLEEP %lld\n", LCD_REFRESH_US - d);
@@ -124,10 +159,8 @@ static void __not_in_flash_func(lcd_task)(void)
 #endif
 	}
 
-	mutex_enter_blocking(&lcd_mutex);
 	/* deinitialize the LCD controller */
 	lcd_dev_exit();
-	mutex_exit(&lcd_mutex);
 	lcd_task_done = true;
 
 	while (1)
@@ -136,27 +169,27 @@ static void __not_in_flash_func(lcd_task)(void)
 
 void lcd_brightness(int brightness)
 {
-	lcd_dev_backlight((uint8_t) brightness);
+	lcd_backlight = brightness;
 }
 
 void lcd_set_rotation(bool rotated)
 {
-	mutex_enter_blocking(&lcd_mutex);
-	lcd_dev_rotation(rotated);
-	mutex_exit(&lcd_mutex);
+	lcd_rotated = rotated;
+}
+
+void lcd_update_led(void)
+{
+	lcd_led_color = led_color;
 }
 
 void lcd_custom_disp(lcd_func_t draw_func)
 {
-	mutex_enter_blocking(&lcd_mutex);
 	lcd_draw_func = draw_func;
 	lcd_shows_status = false;
-	mutex_exit(&lcd_mutex);
 }
 
 void lcd_status_disp(int which)
 {
-	mutex_enter_blocking(&lcd_mutex);
 	switch (which) {
 	case LCD_STATUS_REGISTERS:
 		lcd_status_func = lcd_draw_cpu_reg;
@@ -178,7 +211,6 @@ void lcd_status_disp(int which)
 	}
 	lcd_draw_func = lcd_status_func;
 	lcd_shows_status = true;
-	mutex_exit(&lcd_mutex);
 }
 
 void lcd_status_next(void)
@@ -193,14 +225,11 @@ void lcd_status_next(void)
 		lcd_status_func = lcd_draw_memory;
 	else
 		lcd_status_func = lcd_draw_cpu_reg;
-	if (lcd_shows_status) {
-		mutex_enter_blocking(&lcd_mutex);
+	if (lcd_shows_status)
 		lcd_draw_func = lcd_status_func;
-		mutex_exit(&lcd_mutex);
-	}
 }
 
-static void lcd_draw_empty(bool first)
+static void __not_in_flash_func(lcd_draw_empty)(bool first)
 {
 	if (first)
 		draw_clear(C_BLACK);
@@ -216,65 +245,61 @@ static void lcd_draw_empty(bool first)
 
 #define IXOFF	5	/* info line x pixel offset */
 
-static int temp_refresh;	/* temperature refresh counter */
-
-/*
- *	Draw info line static content
- */
-static void __not_in_flash_func(lcd_info_first)(void)
+static void __not_in_flash_func(lcd_draw_info)(bool first)
 {
 	const char *p;
-	int i;
-	uint16_t y = draw_pixmap->height - font20.height;
-
-	/* draw product info */
-	p = "Z80pack " USR_REL;
-	for (i = 0; *p && i < 12; i++)
-		draw_char(i * font20.width + IXOFF, y, *p++, &font20, C_ORANGE,
-			  C_DKBLUE);
-	draw_char(18 * font20.width + IXOFF, y, '.', &font20, C_ORANGE,
-		  C_DKBLUE);
-	draw_char(21 * font20.width + IXOFF, y, '\007', &font20, C_ORANGE,
-		  C_DKBLUE);
-	draw_char(22 * font20.width + IXOFF, y, 'C', &font20, C_ORANGE,
-		  C_DKBLUE);
-
-	/* draw the RGB LED bracket */
-	draw_led_bracket(14 * font20.width + IXOFF,
-			 y + (font20.height - 10) / 2);
-
-	temp_refresh = LCD_REFRESH - 1; /* force temperature update */
-}
-
-/*
- *	Draw info line dynamic content
- */
-static void __not_in_flash_func(lcd_info_update)(void)
-{
 	int i, temp;
 	uint16_t y = draw_pixmap->height - font20.height;
+	static uint32_t last_temp_upd;
 
-	/* update temperature every second */
-	if (++temp_refresh >= LCD_REFRESH) {
-		temp_refresh = 0;
+	if (first) {
+		/* draw static content */
 
-		/* read the onboard temperature sensor */
-		temp = (int) (read_onboard_temp() * 100.0f + 0.5f);
+		/* draw product info */
+		p = "Z80pack " USR_REL;
+		for (i = 0; *p && i < 12; i++)
+			draw_char(i * font20.width + IXOFF, y, *p++, &font20,
+				  C_ORANGE, C_DKBLUE);
 
-		for (i = 0; i < 5; i++) {
-			draw_char((20 - i) * font20.width + IXOFF, y,
-				  '0' + temp % 10, &font20, C_ORANGE,
-				  C_DKBLUE);
-			if (i < 4)
-				temp /= 10;
-			if (i == 1)
-				i++; /* skip decimal point */
+		/* draw temperature label */
+		draw_char(18 * font20.width + IXOFF, y, '.', &font20,
+			  C_ORANGE, C_DKBLUE);
+		draw_char(21 * font20.width + IXOFF, y, '\007', &font20,
+			  C_ORANGE, C_DKBLUE);
+		draw_char(22 * font20.width + IXOFF, y, 'C', &font20,
+			  C_ORANGE, C_DKBLUE);
+
+		/* draw the RGB LED bracket */
+		draw_led_bracket(14 * font20.width + IXOFF,
+				 y + (font20.height - 10) / 2);
+
+		/* force temperature update */
+		last_temp_upd = lcd_frame_cnt - LCD_REFRESH + 1;
+	} else {
+		/* draw dynamic content */
+
+		/* update temperature every second */
+		if (lcd_frame_cnt - last_temp_upd >= LCD_REFRESH) {
+			last_temp_upd = lcd_frame_cnt;
+
+			/* read the onboard temperature sensor */
+			temp = (int) (read_onboard_temp() * 100.0f + 0.5f);
+
+			for (i = 0; i < 5; i++) {
+				draw_char((20 - i) * font20.width + IXOFF, y,
+					  '0' + temp % 10, &font20, C_ORANGE,
+					  C_DKBLUE);
+				if (i < 4)
+					temp /= 10;
+				if (i == 1)
+					i++; /* skip decimal point */
+			}
 		}
-	}
 
-	/* update the RGB LED */
-	draw_led(14 * font20.width + IXOFF, y + (font20.height - 10) / 2,
-		 led_color);
+		/* update the RGB LED */
+		draw_led(14 * font20.width + IXOFF,
+			 y + (font20.height - 10) / 2, lcd_led_color);
+	}
 }
 
 /*
@@ -402,7 +427,8 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 		first = true;
 	}
 
-	/* use cpu_type in the following code, since cpu can change */
+	/* use cpu_type in the rest of this function, since cpu can change */
+
 #ifndef EXCLUDE_Z80
 	if (cpu_type == Z80) {
 		rp = regs_z80;
@@ -418,6 +444,7 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 
 	if (first) {
 		/* draw static content */
+
 		draw_clear(C_DKBLUE);
 
 		/* setup text grid and draw grid lines */
@@ -459,9 +486,6 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 					draw_grid_char(x++, rp->y, *s++, &grid,
 						       C_WHITE, C_DKBLUE);
 			}
-
-		/* draw info line static content */
-		lcd_info_first();
 	} else {
 		/* draw dynamic content */
 
@@ -508,10 +532,10 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 				w >>= 4;
 			}
 		}
-
-		/* draw info line dynamic content */
-		lcd_info_update();
 	}
+
+	/* draw info line */
+	lcd_draw_info(first);
 }
 
 /*
@@ -533,7 +557,9 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 
 	if (first) {
 		/* draw static content */
+
 		draw_clear(C_DKBLUE);
+
 		draw_hline(MEM_XOFF, MEM_YOFF, 128 + 96 + 4 * MEM_BRDR - 1,
 			   C_GREEN);
 		draw_hline(MEM_XOFF, MEM_YOFF + 128 + 2 * MEM_BRDR - 1,
@@ -545,6 +571,7 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 			   128 + 2 * MEM_BRDR, C_GREEN);
 	} else {
 		/* draw dynamic content */
+
 		p = (uint32_t *) bnk0;
 		for (x = MEM_XOFF + MEM_BRDR;
 		     x < MEM_XOFF + MEM_BRDR + 128; x++) {
@@ -558,6 +585,7 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 #endif
 			}
 		}
+
 		p = (uint32_t *) bnk1;
 		for (x = MEM_XOFF + 3 * MEM_BRDR - 1 + 128;
 		     x < MEM_XOFF + 3 * MEM_BRDR - 1 + 128 + 96; x++) {
@@ -686,14 +714,15 @@ static const int num_leds = sizeof(leds) / sizeof(led_t);
 
 static void __not_in_flash_func(lcd_draw_panel)(bool first)
 {
-	const led_t *p;
+	const led_t *p = leds;
 	int i;
 	uint16_t col;
 
-	p = leds;
 	if (first) {
 		/* draw static content */
+
 		draw_clear(C_DKBLUE);
+
 		for (i = 0; i < num_leds; i++) {
 			draw_char(p->x - PLEDXO, p->y - PLEDYO,
 				  p->c1, &font12, C_WHITE, C_DKBLUE);
@@ -705,9 +734,9 @@ static void __not_in_flash_func(lcd_draw_panel)(bool first)
 			draw_led_bracket(p->x, p->y);
 			p++;
 		}
-		lcd_info_first();
 	} else {
 		/* draw dynamic content */
+
 		for (i = 0; i < num_leds; i++) {
 			col = C_DKRED;
 			if (p->type == LB) {
@@ -720,8 +749,10 @@ static void __not_in_flash_func(lcd_draw_panel)(bool first)
 			draw_led(p->x, p->y, col);
 			p++;
 		}
-		lcd_info_update();
 	}
+
+	/* draw info line */
+	lcd_draw_info(first);
 }
 
 #endif /* SIMPLEPANEL */
@@ -754,6 +785,9 @@ typedef struct lcd_drive {
 
 static lcd_drive_t lcd_drives[NUMDISK];
 
+/*
+ *	Called from core 0 to update disk drive status
+ */
 void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
 		      bool active)
 {
@@ -764,7 +798,7 @@ void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
 	p->addr = addr;
 	p->rdwr = rdwr;
 	p->active = active;
-	p->lastacc = 0;
+	p->lastacc = lcd_frame_cnt;
 
 	if (p->active) {
 		if (p->rdwr)
@@ -773,6 +807,7 @@ void lcd_update_drive(int drive, int track, int sector, WORD addr, bool rdwr,
 			led_color = (led_color & ~C_GREEN) | C_GREEN;
 	} else
 		led_color &= ~(C_RED | C_GREEN);
+	lcd_update_led();
 }
 
 static void __not_in_flash_func(lcd_draw_drives)(bool first)
@@ -781,18 +816,17 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 	int i, j;
 	WORD w;
 	bool clr;
-	lcd_drive_t *p;
+	lcd_drive_t *p = lcd_drives;
 	static draw_grid_t grid;
 
-	p = lcd_drives;
 	if (first) {
 		/* draw static content */
+
 		draw_clear(C_DKBLUE);
 
 		draw_setup_grid(&grid, DXOFF, DYOFF, -1, 4, &font28, DSPC);
+
 		for (i = 0; i < NUMDISK; i++) {
-			p->lastacc = 0;
-			p->sector = 0;
 			draw_grid_char(0, i, 'A' + i, &grid, C_CYAN,
 				       C_DKBLUE);
 			draw_led_bracket(grid.cwidth +
@@ -818,17 +852,17 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 						C_DKYELLOW);
 			p++;
 		}
-
-		lcd_info_first();
      } else {
 		/* draw dynamic content */
+
 		for (i = 0; i < NUMDISK; i++) {
+			/* clear drive 10 seconds after last access */
 			clr = false;
-			if (++p->lastacc >= 10 * LCD_REFRESH) {
-				p->lastacc = 0;
+			if (lcd_frame_cnt - p->lastacc >= 10 * LCD_REFRESH) {
 				p->sector = 0;
 				clr = true;
 			}
+
 			if (p->sector || clr) {
 				draw_led(grid.cwidth +
 					 (2 * grid.cwidth - 10) / 2 +
@@ -862,7 +896,8 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 			}
 			p++;
 		}
+	}
 
-		lcd_info_update();
-     }
+	/* draw info line */
+	lcd_draw_info(first);
 }

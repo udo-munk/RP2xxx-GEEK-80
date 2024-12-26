@@ -12,7 +12,7 @@
 
 #include "draw.h"
 
-extern void lcd_dev_init(void);
+extern void lcd_dev_init(uint8_t backlight);
 extern void lcd_dev_exit(void);
 extern void lcd_dev_backlight(uint8_t value);
 extern void lcd_dev_rotation(bool rotated);
