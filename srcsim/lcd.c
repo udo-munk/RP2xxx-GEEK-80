@@ -139,7 +139,7 @@ static void __not_in_flash_func(lcd_task)(void)
 		/* check if drawing function changed */
 		new_draw_func = lcd_draw_func;
 		if (new_draw_func != draw_func) {
-			draw_func = lcd_draw_func;
+			draw_func = new_draw_func;
 			first = true;
 		}
 
