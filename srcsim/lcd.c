@@ -107,10 +107,11 @@ static void __not_in_flash_func(lcd_task)(void)
 
 	/* initialize the LCD controller */
 	backlight = lcd_backlight;
+	lcd_dev_init(backlight);
+
 	rotated = false;
 	draw_func = NULL;
 	first = true;
-	lcd_dev_init(backlight);
 
 	while (1) {
 		/* loops every LCD_REFRESH_US */
