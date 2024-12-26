@@ -191,6 +191,7 @@ static void p000_out(BYTE data)
 		/* everything else on */
 		led_color = (led_color & ~C_BLUE) | C_BLUE;
 	}
+	lcd_update_led();
 }
 
 /*

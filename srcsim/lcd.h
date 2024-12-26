@@ -21,14 +21,15 @@
 
 typedef void (*lcd_func_t)(bool first);
 
-extern uint16_t led_color;
+extern uint16_t led_color;	/* call lcd_update_led() after changing this */
 
 extern void lcd_init(void), lcd_exit(void);
+extern void lcd_brightness(int brightness);
 extern void lcd_set_rotation(bool rotated);
+extern void lcd_update_led(void);
 extern void lcd_custom_disp(lcd_func_t draw_func);
 extern void lcd_status_disp(int which);
 extern void lcd_status_next(void);
-extern void lcd_brightness(int brightness);
 extern void lcd_update_drive(int drive, int track, int sector, WORD addr,
 			     bool rdwr, bool active);
 

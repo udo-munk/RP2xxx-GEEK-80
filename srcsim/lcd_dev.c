@@ -97,7 +97,7 @@ static const uint8_t lcd_init_tab[] = {
 /*
  *	Initialize LCD controller
  */
-void lcd_dev_init(void)
+void lcd_dev_init(uint8_t backlight)
 {
 	dma_channel_config c;
 	const uint8_t *p;
@@ -161,7 +161,7 @@ void lcd_dev_init(void)
 	sleep_ms(100);
 
 	/* set LCD backlight intensity */
-	lcd_dev_backlight(90);
+	lcd_dev_backlight(backlight);
 
 	/* initialize LCD controller registers */
 	for (p = lcd_init_tab; *p != 0xff;) {
