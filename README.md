@@ -117,3 +117,13 @@ The serial UART is enabled, so that one can connect a terminal. I tested
 this with connecting a Pico probe to the UART.
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/terminal.jpg "Pico probe terminal")
+
+Another feature one might be missing, if just using the prebuild firmware is,
+that z80pack also contains a Mostek In Circuit Emulator (ICE). In the builds
+provided it is diabled, because we assume that those just using it don't
+want to mess with the sources, and just use the little machines to run
+some software on. For the software engineer trying to find some nasty problem
+on a true Von Neumann can be a challange, and we have tools like debuggers
+for this. The ICE can be enabled with a commented define in srcsim/sim.h,
+and gives one everything needed, like software breakpoints, hardware
+breakpoint, single step, dump of memory and CPU registers and so on.
