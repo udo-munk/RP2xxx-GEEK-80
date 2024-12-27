@@ -120,7 +120,7 @@ this with connecting a Pico probe to the UART.
 
 Another feature one might be missing, if just using the prebuild firmware is,
 that z80pack also contains a Mostek In Circuit Emulator (ICE). In the builds
-provided it is diabled, because we assume that those just using it don't
+provided it is disabled, because we assume that those just using it don't
 want to mess with the sources, and just use the little machines to run
 some software on. For the software engineer trying to find some nasty problem
 on a true Von Neumann can be a challange, and we have tools like debuggers
