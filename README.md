@@ -54,6 +54,14 @@ can be switched in the running system with a CP/M program:
 
 And of course Cromemco Dazzler.
 
+# History
+
+![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/8080-CPU.png "Intel 8080 CPU")
+
+In 2024 Intel has 50th anniversary of the 8080 CPU:
+https://www.intel.de/content/www/de/de/newsroom/news/50-years-ago-the-influential-intel-8080.html
+
+
 # Building
 
 To build z80pack for this device you need to have the SDK for RP2040/RP2350
