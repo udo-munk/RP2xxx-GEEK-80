@@ -63,8 +63,8 @@ https://www.intel.de/content/www/de/de/newsroom/news/50-years-ago-the-influentia
 
 The picture shows one of the first 8080 CPU's still in ceramic pack, about
 the size of a modern RP2xxx-GEEK device. This project is a nice demonstration
-of technology advance over 50 years, on the GEEK we cannot only emulate a
-8080 CPU with about 8 times the speed of an original chip, but also a
+of technology advance over 50 years, on the RP2350-GEEK we cannot only emulate
+a 8080 CPU with about 8 times the speed of an original chip, but also a
 complete system like they were build back then. The 8080 was the first
 general purpose 8bit CPU, which allowed to build computer systems for
 everyone, as we have it today.
