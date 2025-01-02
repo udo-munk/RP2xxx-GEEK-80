@@ -61,9 +61,10 @@ And of course Cromemco Dazzler.
 In 2024 Intel has 50th anniversary of the 8080 CPU:
 https://www.intel.de/content/www/de/de/newsroom/news/50-years-ago-the-influential-intel-8080.html
 
-The picture shows one of the first 8080 CPU's still in ceramic pack, about
-the size of a modern RP2xxx-GEEK device. This project is a nice demonstration
-of technology advance over 50 years, on the RP2350-GEEK we cannot only emulate
+The picture (CPU on Altair 8800 CPU board, courtesy Bill Lewis) shows one of
+the first 8080 CPU's still in ceramic pack, about the size of a modern
+RP2xxx-GEEK device. This project is a nice demonstration of technology
+advance over 50 years, on the RP2350-GEEK we cannot only emulate
 a 8080 CPU with about 8 times the speed of an original chip, but also a
 complete system like they were build back then. The 8080 was the first
 general purpose 8bit CPU, which allowed to build computer systems for
