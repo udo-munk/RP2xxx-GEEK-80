@@ -52,7 +52,11 @@ can be switched in the running system with a CP/M program:
 - status of the disks subsystem
 - memory contents
 
-And of course Cromemco Dazzler.
+And of course Cromemco Dazzler:
+
+![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/micro80.jpg "8080 Microchess")
+
+here playing 8080 Microchess for example.
 
 # History
 
