@@ -70,7 +70,7 @@ char *copy_str(char *s)
 		p++;
 	n = p - s;
 
-	t = (char *) malloc(sizeof(char) * n);
+	t = (char *) malloc(n + 1);
 	if (t != NULL) {
 		strncpy(t, s, n);
 		t[n] = '\0';
