@@ -58,6 +58,9 @@ static void lcd_draw_panel(bool first);
 #endif
 static void lcd_draw_memory(bool first);
 static void lcd_draw_drives(bool first);
+#ifdef IOPANEL
+static void lcd_draw_ports(bool first);
+#endif
 
 uint16_t led_color;			/* RGB LED color (core 0) */
 
@@ -195,9 +198,6 @@ void lcd_status_disp(int which)
 	case LCD_STATUS_REGISTERS:
 		lcd_status_func = lcd_draw_cpu_reg;
 		break;
-	case LCD_STATUS_MEMORY:
-		lcd_status_func = lcd_draw_memory;
-		break;
 #ifdef SIMPLEPANEL
 	case LCD_STATUS_PANEL:
 		lcd_status_func = lcd_draw_panel;
@@ -205,6 +205,14 @@ void lcd_status_disp(int which)
 #endif
 	case LCD_STATUS_DRIVES:
 		lcd_status_func = lcd_draw_drives;
+		break;
+#ifdef IOPANEL
+	case LCD_STATUS_PORTS:
+		lcd_status_func = lcd_draw_ports;
+		break;
+#endif
+	case LCD_STATUS_MEMORY:
+		lcd_status_func = lcd_draw_memory;
 		break;
 	case LCD_STATUS_CURRENT:
 	default:
@@ -223,6 +231,10 @@ void lcd_status_next(void)
 #endif
 		lcd_status_func = lcd_draw_drives;
 	else if (lcd_status_func == lcd_draw_drives)
+#ifdef IOPANEL
+		lcd_status_func = lcd_draw_ports;
+	else if (lcd_status_func == lcd_draw_ports)
+#endif
 		lcd_status_func = lcd_draw_memory;
 	else
 		lcd_status_func = lcd_draw_cpu_reg;
@@ -237,42 +249,48 @@ static void __not_in_flash_func(lcd_draw_empty)(bool first)
 }
 
 /*
- *	Info line at the bottom of the LCD, used by CPU status and
- *	LED panel displays:
+ *	Info line at the bottom of the LCD, used by all status
+ *	displays except memory:
  *
- *	01234567890123456789012
- *	Z80pack x.x   o xx.xx°C
+ *	Model x.x   o xx.xx°C
  */
 
-#define IXOFF	5	/* info line x pixel offset */
-
-static void __not_in_flash_func(lcd_draw_info)(bool first)
+static void __not_in_flash_func(lcd_draw_info)(font_t *font, bool first)
 {
 	const char *p;
 	int i, temp;
-	uint16_t y = draw_pixmap->height - font20.height;
+	const uint16_t y = draw_pixmap->height - font->height;
+	const uint16_t n = draw_pixmap->width / font->width;
+	const uint16_t x = (draw_pixmap->width - n * font->width) / 2;
 	static uint32_t last_temp_upd;
 
 	if (first) {
 		/* draw static content */
 
 		/* draw product info */
-		p = "Z80pack " USR_REL;
-		for (i = 0; *p && i < 12; i++)
-			draw_char(i * font20.width + IXOFF, y, *p++, &font20,
+		p = MODEL " " USR_REL;
+		for (i = 0; *p; i++) {
+			if (*p == '-' && n < 27) {
+				while (*p && *p != ' ')
+					p++;
+				if (*p == '\0')
+					break;
+			}
+			draw_char(i * font->width + x, y, *p++, font,
 				  C_ORANGE, C_DKBLUE);
+		}
 
 		/* draw temperature label */
-		draw_char(18 * font20.width + IXOFF, y, '.', &font20,
+		draw_char((n - 5) * font->width + x, y, '.', font,
 			  C_ORANGE, C_DKBLUE);
-		draw_char(21 * font20.width + IXOFF, y, '\007', &font20,
+		draw_char((n - 2) * font->width + x, y, '\007', font,
 			  C_ORANGE, C_DKBLUE);
-		draw_char(22 * font20.width + IXOFF, y, 'C', &font20,
+		draw_char((n - 1) * font->width + x, y, 'C', font,
 			  C_ORANGE, C_DKBLUE);
 
 		/* draw the RGB LED bracket */
-		draw_led_bracket(14 * font20.width + IXOFF,
-				 y + (font20.height - 10) / 2);
+		draw_led_bracket((n - 10) * font->width + x,
+				 y + (font->height - 10) / 2);
 
 		/* force temperature update */
 		last_temp_upd = lcd_frame_cnt - LCD_REFRESH + 1;
@@ -287,8 +305,8 @@ static void __not_in_flash_func(lcd_draw_info)(bool first)
 			temp = (int) (read_onboard_temp() * 100.0f + 0.5f);
 
 			for (i = 0; i < 5; i++) {
-				draw_char((20 - i) * font20.width + IXOFF, y,
-					  '0' + temp % 10, &font20, C_ORANGE,
+				draw_char((n - 3 - i) * font->width + x, y,
+					  '0' + temp % 10, font, C_ORANGE,
 					  C_DKBLUE);
 				if (i < 4)
 					temp /= 10;
@@ -298,8 +316,8 @@ static void __not_in_flash_func(lcd_draw_info)(bool first)
 		}
 
 		/* update the RGB LED */
-		draw_led(14 * font20.width + IXOFF,
-			 y + (font20.height - 10) / 2, lcd_led_color);
+		draw_led((n - 10) * font->width + x,
+			 y + (font->height - 10) / 2, lcd_led_color);
 	}
 }
 
@@ -536,7 +554,7 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 	}
 
 	/* draw info line */
-	lcd_draw_info(first);
+	lcd_draw_info(&font20, first);
 }
 
 /*
@@ -753,7 +771,7 @@ static void __not_in_flash_func(lcd_draw_panel)(bool first)
 	}
 
 	/* draw info line */
-	lcd_draw_info(first);
+	lcd_draw_info(&font20, first);
 }
 
 #endif /* SIMPLEPANEL */
@@ -900,5 +918,89 @@ static void __not_in_flash_func(lcd_draw_drives)(bool first)
 	}
 
 	/* draw info line */
-	lcd_draw_info(first);
+	lcd_draw_info(&font20, first);
 }
+
+#ifdef IOPANEL
+
+/*
+ *	I/O ports access display:
+ *
+ *	00 88888888888888888888888888888888
+ *	20 88888888888888888888888888888888
+ *	40 88888888888888888888888888888888
+ *	60 88888888888888888888888888888888
+ *	80 88888888888888888888888888888888
+ *	A0 88888888888888888888888888888888
+ *	C0 88888888888888888888888888888888
+ *	E0 88888888888888888888888888888888
+ *
+ *	Shows read/write accesses to I/O ports in the last refresh cycle.
+ */
+
+#define IOXOFF	0			/* I/O ports panel x offset */
+#define IOYOFF	0			/* I/O ports panel y offset */
+
+#define IOLEDW	6			/* I/O port LED width */
+#define IOLEDXS	1			/* I/O port LED x spacing */
+#define IOLEDGW	(IOLEDW + IOLEDXS)	/* I/O port LED grid cell width */
+#define IOLEDH	7			/* I/O port LED height */
+#define IOLEDYS	1			/* I/O port LED y spacing */
+#define IOLEDGH	(2 * IOLEDH + IOLEDYS)	/* I/O port LED grid cell height */
+
+static void __not_in_flash_func(lcd_draw_ports)(bool first)
+{
+	port_flags_t *p = port_flags;
+	int i, j, k;
+	uint16_t col;
+
+	if (first) {
+		/* draw static content */
+
+		draw_clear(C_DKBLUE);
+		for (j = 0; j < 8; j++) {
+			draw_char(IOXOFF, j * IOLEDGH + IOYOFF,
+				  "02468ACE"[j], &font14, C_WHITE, C_DKBLUE);
+			draw_char(font14.width + IOXOFF, j * IOLEDGH + IOYOFF,
+				  '0', &font14, C_WHITE, C_DKBLUE);
+			if (j)
+				draw_hline(2 * font14.width + 1 + IOXOFF,
+					   j * IOLEDGH - IOLEDYS + IOYOFF,
+					   32 * IOLEDGW - IOLEDXS,
+					   C_DKYELLOW);
+		}
+		for (i = 1; i < 32; i++)
+			draw_vline(2 * font14.width + 1 +
+				   i * IOLEDGW - IOLEDXS + IOXOFF,
+				   IOYOFF, 8 * IOLEDGH - IOLEDYS, C_DKYELLOW);
+	} else {
+		/* draw dynamic content */
+
+		for (j = 0; j < 8; j++) {
+			for (i = 0; i < 32; i++) {
+				col = (p->in ? C_GREEN : C_DKBLUE);
+				for (k = 0; k < IOLEDH; k++)
+					draw_hline(2 * font14.width + 1 +
+						   i * IOLEDGW + IOXOFF,
+						   k + j * IOLEDGH + IOYOFF,
+						   IOLEDW, col);
+				col = (p->out ? C_RED : C_DKBLUE);
+				for (k = 0; k < IOLEDH; k++)
+					draw_hline(2 * font14.width + 1 +
+						   i * IOLEDGW + IOXOFF,
+						   k + j * IOLEDGH +
+						   IOLEDH + IOYOFF,
+						   IOLEDW, col);
+				p++;
+			}
+		}
+
+		/* clear access flags */
+		memset(port_flags, 0, sizeof(port_flags));
+	}
+
+	/* draw info line */
+	lcd_draw_info(&font16, first);
+}
+
+#endif /* IOPANEL */

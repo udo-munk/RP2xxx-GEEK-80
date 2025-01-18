@@ -17,7 +17,8 @@
 #define LCD_STATUS_REGISTERS	1
 #define LCD_STATUS_PANEL	2
 #define LCD_STATUS_DRIVES	3
-#define LCD_STATUS_MEMORY	4
+#define LCD_STATUS_PORTS	4
+#define LCD_STATUS_MEMORY	5
 
 typedef void (*lcd_func_t)(bool first);
 
