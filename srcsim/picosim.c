@@ -52,6 +52,7 @@
 #include "disks.h"
 #include "draw.h"
 #include "lcd.h"
+#include "picosim.h"
 
 #ifdef WANT_ICE
 static void picosim_ice_cmd(char *cmd, WORD *wrk_addr);

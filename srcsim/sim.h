@@ -19,6 +19,7 @@
 /*#define FAST_BLOCK*/	/* much faster but not accurate Z80 block instr. */
 #endif
 #define SIMPLEPANEL	/* this machine has a simple frontpanel */
+#define IOPANEL		/* this machine has an I/O port panel */
 
 /*#define WANT_ICE*/	/* attach ICE to headless machine */
 #ifdef WANT_ICE

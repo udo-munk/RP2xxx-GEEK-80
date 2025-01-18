@@ -131,6 +131,9 @@ void config(void)
 		case LCD_STATUS_PANEL:
 #endif
 		case LCD_STATUS_DRIVES:
+#ifdef IOPANEL
+		case LCD_STATUS_PORTS:
+#endif
 		case LCD_STATUS_MEMORY:
 			break;
 		default:
@@ -196,6 +199,11 @@ void config(void)
 			case LCD_STATUS_DRIVES:
 				printf("floppy diskette drives\n");
 				break;
+#ifdef IOPANEL
+			case LCD_STATUS_PORTS:
+				printf("I/O ports panel\n");
+				break;
+#endif
 			case LCD_STATUS_MEMORY:
 				printf("memory contents\n");
 				break;
@@ -259,6 +267,10 @@ void config(void)
 #endif
 				initial_lcd = LCD_STATUS_DRIVES;
 			else if (initial_lcd == LCD_STATUS_DRIVES)
+#ifdef IOPANEL
+				initial_lcd = LCD_STATUS_PORTS;
+			else if (initial_lcd == LCD_STATUS_PORTS)
+#endif
 				initial_lcd = LCD_STATUS_MEMORY;
 			else
 				initial_lcd = LCD_STATUS_REGISTERS;
