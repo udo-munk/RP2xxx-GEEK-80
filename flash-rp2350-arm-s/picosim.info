@@ -2,13 +2,13 @@ File picosim.uf2 family ID 'rp2350-arm-s':
 
 Program Information
  name:                z80pack picosim
- version:             1.5
+ version:             1.6
  web site:            https://github.com/udo-munk/RP2xxx-GEEK-80
  description:         z80pack on Waveshare RP2350-GEEK
  features:            UART stdin / stdout
                       USB stdin / stdout
  binary start:        0x10000000
- binary end:          0x1004efcc
+ binary end:          0x1004fa28
  target chip:         RP2350
  image type:          ARM Secure
 
@@ -22,17 +22,17 @@ Build Information
  sdk version:         2.1.0
  pico_board:          waveshare_rp2350_geek
  boot2_name:          boot2_w25q080
- build date:          Dec 27 2024
+ build date:          Jan 18 2025
  build attributes:    Release
 
 Metadata Block 1
  address:             0x10000138
- next block address:  0x1004efb8
+ next block address:  0x1004fa14
  block type:          image def
  target chip:         RP2350
  image type:          ARM Secure
 
 Metadata Block 2
- address:             0x1004efb8
+ address:             0x1004fa14
  next block address:  0x10000138
  block type:          ignored
