@@ -16,7 +16,7 @@
 #define NUMCHARS	128
 
 /* uni/x11gr.uni and uni/ascii-h.uni */
-uint16_t codepts[NUMCHARS] = {
+static uint16_t codepts[NUMCHARS] = {
 	0x25AE, 0x25C6, 0x2592, 0x2409, 0x240C, 0x240D, 0x240A, 0x00B0,
 	0x00B1, 0x2424, 0x240B, 0x2518, 0x2510, 0x250C, 0x2514, 0x253C,
 	0x23BA, 0x23BB, 0x2500, 0x23BC, 0x23BD, 0x251C, 0x2524, 0x2534,
@@ -35,22 +35,22 @@ uint16_t codepts[NUMCHARS] = {
 	0x0078, 0x0079, 0x007A, 0x007B, 0x007C, 0x007D, 0x007E, 0x2302
 };
 
-char *prog;
+static char *prog;
 
 #define MISSFONT	"missing font file name"
 #define CANTOPEN	"can't open font file"
 #define OUTOFMEM	"out of memory"
 #define EOFINPUT	"end of file on input"
 
-void fatal(char *s)
+static void fatal(char *s)
 {
 	fprintf(stderr, "%s: %s\n", prog, s);
 	exit(EXIT_FAILURE);
 }
 
-char *get_token(char *s, char *token)
+static char *get_token(char *s, char *token)
 {
-	while(!isspace((unsigned char) *s) && *s != '\n' && *s != '\0')
+	while (!isspace((unsigned char) *s) && *s != '\n' && *s != '\0')
 		*token++ = *s++;
 	while (isspace((unsigned char) *s))
 		s++;
@@ -58,7 +58,7 @@ char *get_token(char *s, char *token)
 	return s;
 }
 
-char *copy_str(char *s)
+static char *copy_str(char *s)
 {
 	char *p, *t;
 	int n;

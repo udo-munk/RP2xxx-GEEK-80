@@ -57,7 +57,7 @@ static BYTE hwctl_lock = 0xff; /* lock status hardware control port */
  *	This array contains function pointers for every input
  *	I/O port (0 - 255), to do the required I/O.
  */
-BYTE (*const port_in[256])(void) = {
+in_func_t *const port_in[256] = {
 	[  0] = p000_in,	/* SIO status */
 	[  1] = p001_in,	/* SIO data */
 	[  4] = fdc_in,		/* FDC status */
@@ -74,7 +74,7 @@ BYTE (*const port_in[256])(void) = {
  *	This array contains function pointers for every output
  *	I/O port (0 - 255), to do the required I/O.
  */
-void (*const port_out[256])(BYTE data) = {
+out_func_t *const port_out[256] = {
 	[  0] = p000_out,	/* RGB LED */
 	[  1] = p001_out,	/* SIO data */
 	[  4] = fdc_out,	/* FDC command */
