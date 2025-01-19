@@ -116,7 +116,7 @@ static void __not_in_flash_func(lcd_task)(void)
 	draw_func = NULL;
 	first = true;
 
-	while (1) {
+	while (true) {
 		/* loops every LCD_REFRESH_US */
 
 		t = get_absolute_time();
@@ -167,7 +167,7 @@ static void __not_in_flash_func(lcd_task)(void)
 	lcd_dev_exit();
 	lcd_task_done = true;
 
-	while (1)
+	while (true)
 		__wfi();
 }
 
