@@ -262,7 +262,7 @@ static inline void draw_vline(uint16_t x, uint16_t y, uint16_t h, uint16_t col)
 		return;
 	}
 	if (x >= draw_pixmap->width || y >= draw_pixmap->height ||
-	    y + h > draw_pixmap->width) {
+	    y + h > draw_pixmap->height) {
 		fprintf(stderr, "%s: line (%d,%d)-(%d,%d) is outside "
 			"(0,0)-(%d,%d)\n", __func__, x, y, x, y + h - 1,
 			draw_pixmap->width - 1, draw_pixmap->height - 1);
@@ -299,7 +299,7 @@ static inline void draw_setup_grid(draw_grid_t *grid, uint16_t xoff,
 		fprintf(stderr," %s: number of columns is zero\n", __func__);
 		return;
 	}
-	if (cols > (draw_pixmap->width - xoff) / grid->cwidth) {
+	if (cols > (draw_pixmap->width - xoff) / font->width) {
 		fprintf(stderr," %s: number of columns %d is too large\n",
 			__func__, cols);
 		return;
@@ -308,7 +308,7 @@ static inline void draw_setup_grid(draw_grid_t *grid, uint16_t xoff,
 		fprintf(stderr," %s: number of rows is zero\n", __func__);
 		return;
 	}
-	if (rows > (draw_pixmap->height - yoff + spc) / grid->cheight) {
+	if (rows > (draw_pixmap->height - yoff + spc) / (font->height + spc)) {
 		fprintf(stderr," %s: number of rows %d is too large\n",
 			__func__, rows);
 		return;

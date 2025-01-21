@@ -5,6 +5,7 @@
  * Copyright (C) 2024 by Thomas Eberhardt
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -98,7 +99,7 @@ int main(int argc, char *argv[])
 		fatal(CANTOPEN);
 
 	/* read font properties */
-	for (;;) {
+	while (true) {
 		if (fgets(line, STRSIZE, fp) == NULL)
 			fatal(EOFINPUT);
 		s = get_token(line, token);
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
 		fatal(OUTOFMEM);
 
 	/* read font characters and draw them into the bitmap */
-	for (;;) {
+	while (true) {
 		if (fgets(line, STRSIZE, fp) == NULL)
 			fatal(EOFINPUT);
 		s = get_token(line, token);
