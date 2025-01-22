@@ -195,7 +195,10 @@ int main(void)
 	config();		/* configure the machine */
 
 	f_value = speed;	/* setup speed of the CPU */
-	tmax = speed * 10000;	/* theoretically */
+	if (f_value)
+		tmax = speed * 10000;	/* theoretically */
+	else
+		tmax = 100000;
 
 #ifdef SIMPLEPANEL
 	fp_led_address = PC;
