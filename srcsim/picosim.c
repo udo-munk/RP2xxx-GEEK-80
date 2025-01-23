@@ -188,10 +188,10 @@ int main(void)
 	printf("%s\n\n", USR_CPR);
 
 	init_cpu();		/* initialize CPU */
+	PC = 0xff00;		/* power on jump into the boot ROM */
 	init_disks();		/* initialize disk drives */
 	init_memory();		/* initialize memory configuration */
 	init_io();		/* initialize I/O devices */
-	PC = 0xff00;		/* power on jump into the boot ROM */
 	config();		/* configure the machine */
 
 	f_value = speed;	/* setup speed of the CPU */
