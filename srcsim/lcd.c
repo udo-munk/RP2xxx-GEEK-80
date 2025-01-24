@@ -385,7 +385,7 @@ typedef struct reg {
 
 static const reg_t __not_in_flash("lcd_tables") regs_z80[] = {
 	{  4, 0, RB, "AF",   .b.p = &A },
-	{  6, 0, RB, NULL,   .i.p = &F },
+	{  6, 0, RJ, NULL,   .i.p = &F },
 	{ 12, 0, RB, "BC",   .b.p = &B },
 	{ 14, 0, RB, NULL,   .b.p = &C },
 	{ 20, 0, RB, "DE",   .b.p = &D },
@@ -427,7 +427,7 @@ static const int num_regs_z80 = sizeof(regs_z80) / sizeof(reg_t);
 
 static const reg_t __not_in_flash("lcd_tables") regs_8080[] = {
 	{  4, 0, RB, "AF", .b.p = &A },
-	{  6, 0, RB, NULL, .i.p = &F },
+	{  6, 0, RJ, NULL, .i.p = &F },
 	{ 13, 0, RB, "BC", .b.p = &B },
 	{ 15, 0, RB, NULL, .b.p = &C },
 	{  4, 1, RB, "DE", .b.p = &D },
