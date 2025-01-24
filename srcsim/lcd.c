@@ -252,72 +252,85 @@ static void __not_in_flash_func(lcd_draw_empty)(bool first)
  *	Info line at the bottom of the LCD, used by all status
  *	displays except memory:
  *
- *	Model x.x   o xx.xx°C
+ *	xx.xx °C   o    xxx.xx MHz
  */
 
 static void __not_in_flash_func(lcd_draw_info)(font_t *font, bool first)
 {
-	const char *p;
-	int i, temp;
+	char c;
+	int i, f, temp, digit;
+	bool onlyz;
+	const uint16_t w = font->width;
+	const uint16_t n = draw_pixmap->width / w;
+	const uint16_t x = (draw_pixmap->width - n * w) / 2;
 	const uint16_t y = draw_pixmap->height - font->height;
-	const uint16_t n = draw_pixmap->width / font->width;
-	const uint16_t x = (draw_pixmap->width - n * font->width) / 2;
-	static uint32_t last_temp_upd;
+	static uint32_t last_upd;
 
 	if (first) {
 		/* draw static content */
 
-		/* draw product info */
-		p = MODEL " " USR_REL;
-		for (i = 0; *p; i++) {
-			if (*p == '-' && n < 27) {
-				while (*p && *p != ' ')
-					p++;
-				if (*p == '\0')
-					break;
-			}
-			draw_char(i * font->width + x, y, *p++, font,
-				  C_ORANGE, C_DKBLUE);
-		}
+		/* draw temperature text */
+		draw_char(2 * w + x, y, '.', font, C_ORANGE, C_DKBLUE);
+		draw_char(6 * w + x, y, '\007', font, C_ORANGE, C_DKBLUE);
+		draw_char(7 * w + x, y, 'C', font, C_ORANGE, C_DKBLUE);
 
-		/* draw temperature label */
-		draw_char((n - 5) * font->width + x, y, '.', font,
-			  C_ORANGE, C_DKBLUE);
-		draw_char((n - 2) * font->width + x, y, '\007', font,
-			  C_ORANGE, C_DKBLUE);
-		draw_char((n - 1) * font->width + x, y, 'C', font,
-			  C_ORANGE, C_DKBLUE);
+		/* draw frequency text */
+		draw_char((n - 7) * w + x, y, '.', font, C_ORANGE, C_DKBLUE);
+		draw_char((n - 3) * w + x, y, 'M', font, C_ORANGE, C_DKBLUE);
+		draw_char((n - 2) * w + x, y, 'H', font, C_ORANGE, C_DKBLUE);
+		draw_char((n - 1) * w + x, y, 'z', font, C_ORANGE, C_DKBLUE);
 
 		/* draw the RGB LED bracket */
-		draw_led_bracket((n - 10) * font->width + x,
-				 y + (font->height - 10) / 2);
+		draw_led_bracket(11 * w + x, y + (font->height - 10) / 2);
 
-		/* force temperature update */
-		last_temp_upd = lcd_frame_cnt - LCD_REFRESH + 1;
+		/* force update */
+		last_upd = lcd_frame_cnt - LCD_REFRESH + 1;
 	} else {
 		/* draw dynamic content */
 
-		/* update temperature every second */
-		if (lcd_frame_cnt - last_temp_upd >= LCD_REFRESH) {
-			last_temp_upd = lcd_frame_cnt;
+		/* update temperature and frequency every second */
+		if (lcd_frame_cnt - last_upd >= LCD_REFRESH) {
+			last_upd = lcd_frame_cnt;
 
 			/* read the onboard temperature sensor */
 			temp = (int) (read_onboard_temp() * 100.0f + 0.5f);
 
+			/* draw temperature value */
 			for (i = 0; i < 5; i++) {
-				draw_char((n - 3 - i) * font->width + x, y,
-					  '0' + temp % 10, font, C_ORANGE,
-					  C_DKBLUE);
+				draw_char((4 - i) * w + x, y, '0' + temp % 10,
+					  font, C_ORANGE, C_DKBLUE);
 				if (i < 4)
 					temp /= 10;
 				if (i == 1)
 					i++; /* skip decimal point */
 			}
+
+			/* draw frequency value */
+			f = (unsigned) (cpu_freq / 10000ULL);
+			digit = 100000;
+			onlyz = true;
+			for (i = 0; i < 7; i++) {
+				c = '0';
+				while (f > digit) {
+					f -= digit;
+					c++;
+				}
+				if (onlyz && i < 3 && c == '0')
+					c = ' ';
+				else
+					onlyz = false;
+				draw_char((n - 11 + i) * w + x, y, c,
+					  font, C_ORANGE, C_DKBLUE);
+				if (i < 6)
+					digit /= 10;
+				if (i == 3)
+					i++; /* skip decimal point */
+			}
 		}
 
 		/* update the RGB LED */
-		draw_led((n - 10) * font->width + x,
-			 y + (font->height - 10) / 2, lcd_led_color);
+		draw_led(11 * w + x, y + (font->height - 10) / 2,
+			 lcd_led_color);
 	}
 }
 
