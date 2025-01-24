@@ -307,23 +307,23 @@ static void __not_in_flash_func(lcd_draw_info)(font_t *font, bool first)
 
 			/* draw frequency value */
 			f = (unsigned) (cpu_freq / 10000ULL);
-			digit = 100000;
+			digit = 10000;
 			onlyz = true;
-			for (i = 0; i < 7; i++) {
+			for (i = 0; i < 6; i++) {
 				c = '0';
 				while (f > digit) {
 					f -= digit;
 					c++;
 				}
-				if (onlyz && i < 3 && c == '0')
+				if (onlyz && i < 2 && c == '0')
 					c = ' ';
 				else
 					onlyz = false;
-				draw_char((n - 11 + i) * w + x, y, c,
+				draw_char((n - 10 + i) * w + x, y, c,
 					  font, C_ORANGE, C_DKBLUE);
-				if (i < 6)
+				if (i < 5)
 					digit /= 10;
-				if (i == 3)
+				if (i == 2)
 					i++; /* skip decimal point */
 			}
 		}
@@ -340,16 +340,16 @@ static void __not_in_flash_func(lcd_draw_info)(font_t *font, bool first)
  *	Z80 CPU using font20 (10 x 20 pixels):
  *
  *	  01234567890123456789012
- *	0 A  xx   BC xxxx DE xxxx
+ *	0 AF xxxx BC xxxx DE xxxx
  *	1 HL xxxx SP xxxx PC xxxx
- *	2 IX xxxx IY xxxx AF'xxxx
- *	3 BC'xxxx DE'xxxx HL'xxxx
+ *	2 AF'xxxx BC'xxxx DE'xxxx
+ *	3 HL'xxxx IX xxxx IY xxxx
  *	4 F  SZHPNC  IF12 IR xxxx
  *
  *	8080 CPU using font28 (14 x 28 pixels):
  *
  *	  0123456789012345
- *	0 A  xx    BC xxxx
+ *	0 AF xxxx  BC xxxx
  *	1 DE xxxx  HL xxxx
  *	2 SP xxxx  PC xxxx
  *	3 F  SZHPC    IF 1
@@ -358,7 +358,7 @@ static void __not_in_flash_func(lcd_draw_info)(font_t *font, bool first)
 typedef struct reg {
 	uint8_t x;
 	uint8_t y;
-	enum { RB, RW, RF, RI, RA, RR } type;
+	enum { RB, RW, RJ, RF, RI, RR } type;
 	const char *l;
 	union {
 		struct {
@@ -367,6 +367,9 @@ typedef struct reg {
 		struct {
 			const WORD *p;
 		} w;
+		struct {
+			const int *p;
+		} i;
 		struct {
 			char c;
 			uint8_t m;
@@ -381,7 +384,8 @@ typedef struct reg {
 #define SPC20	3	/* vertical text spacing for font20 */
 
 static const reg_t __not_in_flash("lcd_tables") regs_z80[] = {
-	{  4, 0, RB, "A",    .b.p = &A },
+	{  4, 0, RB, "AF",   .b.p = &A },
+	{  6, 0, RB, NULL,   .i.p = &F },
 	{ 12, 0, RB, "BC",   .b.p = &B },
 	{ 14, 0, RB, NULL,   .b.p = &C },
 	{ 20, 0, RB, "DE",   .b.p = &D },
@@ -390,16 +394,16 @@ static const reg_t __not_in_flash("lcd_tables") regs_z80[] = {
 	{  6, 1, RB, NULL,   .b.p = &L },
 	{ 14, 1, RW, "SP",   .w.p = &SP },
 	{ 22, 1, RW, "PC",   .w.p = &PC },
-	{  6, 2, RW, "IX",   .w.p = &IX },
-	{ 14, 2, RW, "IY",   .w.p = &IY },
-	{ 20, 2, RB, "AF\'", .b.p = &A_ },
-	{ 22, 2, RA, NULL,   .b.p = NULL },
-	{  4, 3, RB, "BC\'", .b.p = &B_ },
-	{  6, 3, RB, NULL,   .b.p = &C_ },
-	{ 12, 3, RB, "DE\'", .b.p = &D_ },
-	{ 14, 3, RB, NULL,   .b.p = &E_ },
-	{ 20, 3, RB, "HL\'", .b.p = &H_ },
-	{ 22, 3, RB, NULL,   .b.p = &L_ },
+	{  4, 2, RB, "AF\'", .b.p = &A_ },
+	{  6, 2, RJ, NULL,   .i.p = &F_ },
+	{ 12, 2, RB, "BC\'", .b.p = &B_ },
+	{ 14, 2, RB, NULL,   .b.p = &C_ },
+	{ 20, 2, RB, "DE\'", .b.p = &D_ },
+	{ 22, 2, RB, NULL,   .b.p = &E_ },
+	{  4, 3, RB, "HL\'", .b.p = &H_ },
+	{  6, 3, RB, NULL,   .b.p = &L_ },
+	{ 14, 3, RW, "IX",   .w.p = &IX },
+	{ 22, 3, RW, "IY",   .w.p = &IY },
 	{  3, 4, RF, NULL,   .f.c = 'S', .f.m = S_FLAG },
 	{  4, 4, RF, "F",    .f.c = 'Z', .f.m = Z_FLAG },
 	{  5, 4, RF, NULL,   .f.c = 'H', .f.m = H_FLAG },
@@ -422,7 +426,8 @@ static const int num_regs_z80 = sizeof(regs_z80) / sizeof(reg_t);
 #define SPC28	1	/* vertical text spacing for font28 */
 
 static const reg_t __not_in_flash("lcd_tables") regs_8080[] = {
-	{  4, 0, RB, "A",  .b.p = &A },
+	{  4, 0, RB, "AF", .b.p = &A },
+	{  6, 0, RB, NULL, .i.p = &F },
 	{ 13, 0, RB, "BC", .b.p = &B },
 	{ 15, 0, RB, NULL, .b.p = &C },
 	{  4, 1, RB, "DE", .b.p = &D },
@@ -532,6 +537,10 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 				w = *(rp->w.p);
 				j = 4;
 				break;
+			case RJ: /* F or F_ integer register */
+				w = *(rp->i.p);
+				j = 2;
+				break;
 			case RF: /* flags */
 				draw_grid_char(rp->x, rp->y, rp->f.c, &grid,
 					       (F & rp->f.m) ? C_GREEN : C_RED,
@@ -543,10 +552,6 @@ static void __not_in_flash_func(lcd_draw_cpu_reg)(bool first)
 					       C_GREEN : C_RED, C_DKBLUE);
 				continue;
 #ifndef EXCLUDE_Z80
-			case RA: /* alternate flags (int) */
-				w = F_;
-				j = 2;
-				break;
 			case RR: /* refresh register */
 				w = (R_ & 0x80) | (R & 0x7f);
 				j = 2;
