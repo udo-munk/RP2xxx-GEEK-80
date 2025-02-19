@@ -1,7 +1,7 @@
 /*
  * Functions for using the RP2040/RP2350-GEEK LCD from the emulation
  *
- * Copyright (C) 2024 by Udo Munk & Thomas Eberhardt
+ * Copyright (C) 2024-2025 by Udo Munk & Thomas Eberhardt
  */
 
 #ifndef LCD_INC

@@ -2,7 +2,7 @@
  * Functions for communicating with the RP2040/RP2350-GEEK LCD
  * (loosely based on Waveshare example code)
  *
- * Copyright (C) 2024 by Thomas Eberhardt
+ * Copyright (C) 2024-2025 by Thomas Eberhardt
  */
 
 #include <stdint.h>

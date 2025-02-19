@@ -1,7 +1,7 @@
 /*
  * Functions for drawing into a pixmap (supports COLOR_DEPTH 12 and 16)
  *
- * Copyright (C) 2024 by Thomas Eberhardt
+ * Copyright (C) 2024-2025 by Thomas Eberhardt
  */
 
 #ifndef DRAW_INC
