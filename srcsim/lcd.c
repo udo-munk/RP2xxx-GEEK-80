@@ -18,14 +18,15 @@
 #include "lcd.h"
 #include "draw.h"
 #include "disks.h"
+#include "gpio.h"
 #include "picosim.h"
 
 #if COLOR_DEPTH == 12
-#define STRIDE (((WAVESHARE_GEEK_LCD_WIDTH + 1) / 2) * 3)
+#define STRIDE (((WAVESHARE_LCD_WIDTH + 1) / 2) * 3)
 #else
-#define STRIDE (WAVESHARE_GEEK_LCD_WIDTH * 2)
+#define STRIDE (WAVESHARE_LCD_WIDTH * 2)
 #endif
-static uint8_t pixmap_bits[WAVESHARE_GEEK_LCD_HEIGHT * STRIDE];
+static uint8_t pixmap_bits[WAVESHARE_LCD_HEIGHT * STRIDE];
 
 /*
  *	pixmap for drawing into.
@@ -33,8 +34,8 @@ static uint8_t pixmap_bits[WAVESHARE_GEEK_LCD_HEIGHT * STRIDE];
 static draw_pixmap_t lcd_pixmap = {
 	.bits = pixmap_bits,
 	.depth = COLOR_DEPTH,
-	.width = WAVESHARE_GEEK_LCD_WIDTH,
-	.height = WAVESHARE_GEEK_LCD_HEIGHT,
+	.width = WAVESHARE_LCD_WIDTH,
+	.height = WAVESHARE_LCD_HEIGHT,
 	.stride = STRIDE
 };
 
