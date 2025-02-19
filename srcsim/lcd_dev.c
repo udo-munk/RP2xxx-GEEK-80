@@ -18,7 +18,7 @@
 #include "lcd_dev.h"
 #include "draw.h"
 
-#define LCD_SPI		(__CONCAT(spi,WAVESHARE_GEEK_LCD_SPI))
+#define LCD_SPI		(__CONCAT(spi,WAVESHARE_LCD_SPI))
 #define LCD_DMA_IRQ	(DMA_IRQ_1)
 
 static bool lcd_rotated;
@@ -34,10 +34,10 @@ static void lcd_dma_wait(void);
  */
 static void __not_in_flash_func(lcd_dev_send_cmd)(uint8_t reg)
 {
-	gpio_put(WAVESHARE_GEEK_LCD_DC_PIN, 0);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 0);
+	gpio_put(WAVESHARE_LCD_DC_PIN, 0);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 0);
 	spi_write_blocking(LCD_SPI, &reg, 1);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 1);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 1);
 }
 
 /*
@@ -45,10 +45,10 @@ static void __not_in_flash_func(lcd_dev_send_cmd)(uint8_t reg)
  */
 static void __not_in_flash_func(lcd_dev_send_byte)(uint8_t data)
 {
-	gpio_put(WAVESHARE_GEEK_LCD_DC_PIN, 1);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 0);
+	gpio_put(WAVESHARE_LCD_DC_PIN, 1);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 0);
 	spi_write_blocking(LCD_SPI, &data, 1);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 1);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 1);
 }
 
 /*
@@ -58,11 +58,11 @@ static void __not_in_flash_func(lcd_dev_send_word)(uint16_t data)
 {
 	uint8_t h = (data >> 8) & 0xff, l = data & 0xff;
 
-	gpio_put(WAVESHARE_GEEK_LCD_DC_PIN, 1);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 0);
+	gpio_put(WAVESHARE_LCD_DC_PIN, 1);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 0);
 	spi_write_blocking(LCD_SPI, &h, 1);
 	spi_write_blocking(LCD_SPI, &l, 1);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 1);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 1);
 }
 
 /*
@@ -111,25 +111,25 @@ void lcd_dev_init(uint8_t backlight)
 	/* SPI Config for LCD controller */
 	/* 41.67 MHz on 125 MHz RP2040, 50 MHz on 150 MHz RP2350 */
 	spi_init(LCD_SPI, clock_get_hz(clk_sys) / 3);
-	gpio_set_function(WAVESHARE_GEEK_LCD_SCLK_PIN, GPIO_FUNC_SPI);
-	gpio_set_function(WAVESHARE_GEEK_LCD_TX_PIN, GPIO_FUNC_SPI);
+	gpio_set_function(WAVESHARE_LCD_SCLK_PIN, GPIO_FUNC_SPI);
+	gpio_set_function(WAVESHARE_LCD_TX_PIN, GPIO_FUNC_SPI);
 
 	/* GPIO Config for LCD controller */
-	gpio_init(WAVESHARE_GEEK_LCD_RST_PIN);
-	gpio_set_dir(WAVESHARE_GEEK_LCD_RST_PIN, GPIO_OUT);
-	gpio_init(WAVESHARE_GEEK_LCD_DC_PIN);
-	gpio_set_dir(WAVESHARE_GEEK_LCD_DC_PIN, GPIO_OUT);
-	gpio_init(WAVESHARE_GEEK_LCD_CS_PIN);
-	gpio_set_dir(WAVESHARE_GEEK_LCD_CS_PIN, GPIO_OUT);
-	gpio_init(WAVESHARE_GEEK_LCD_BL_PIN);
-	gpio_set_dir(WAVESHARE_GEEK_LCD_BL_PIN, GPIO_OUT);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 1);
-	gpio_put(WAVESHARE_GEEK_LCD_DC_PIN, 0);
-	gpio_put(WAVESHARE_GEEK_LCD_BL_PIN, 1);
+	gpio_init(WAVESHARE_LCD_RST_PIN);
+	gpio_set_dir(WAVESHARE_LCD_RST_PIN, GPIO_OUT);
+	gpio_init(WAVESHARE_LCD_DC_PIN);
+	gpio_set_dir(WAVESHARE_LCD_DC_PIN, GPIO_OUT);
+	gpio_init(WAVESHARE_LCD_CS_PIN);
+	gpio_set_dir(WAVESHARE_LCD_CS_PIN, GPIO_OUT);
+	gpio_init(WAVESHARE_LCD_BL_PIN);
+	gpio_set_dir(WAVESHARE_LCD_BL_PIN, GPIO_OUT);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 1);
+	gpio_put(WAVESHARE_LCD_DC_PIN, 0);
+	gpio_put(WAVESHARE_LCD_BL_PIN, 1);
 
 	/* PWM Config for LCD backlight */
-	gpio_set_function(WAVESHARE_GEEK_LCD_BL_PIN, GPIO_FUNC_PWM);
-	lcd_pwm_slice_num = pwm_gpio_to_slice_num(WAVESHARE_GEEK_LCD_BL_PIN);
+	gpio_set_function(WAVESHARE_LCD_BL_PIN, GPIO_FUNC_PWM);
+	lcd_pwm_slice_num = pwm_gpio_to_slice_num(WAVESHARE_LCD_BL_PIN);
 	pwm_set_wrap(lcd_pwm_slice_num, 100);
 	pwm_set_chan_level(lcd_pwm_slice_num, PWM_CHAN_B, 1);
 	pwm_set_clkdiv(lcd_pwm_slice_num, 50);
@@ -153,11 +153,11 @@ void lcd_dev_init(uint8_t backlight)
 	irq_set_enabled(LCD_DMA_IRQ, true);
 
 	/* reset the LCD controller */
-	gpio_put(WAVESHARE_GEEK_LCD_RST_PIN, 1);
+	gpio_put(WAVESHARE_LCD_RST_PIN, 1);
 	sleep_ms(100);
-	gpio_put(WAVESHARE_GEEK_LCD_RST_PIN, 0);
+	gpio_put(WAVESHARE_LCD_RST_PIN, 0);
 	sleep_ms(100);
-	gpio_put(WAVESHARE_GEEK_LCD_RST_PIN, 1);
+	gpio_put(WAVESHARE_LCD_RST_PIN, 1);
 	sleep_ms(100);
 
 	/* set LCD backlight intensity */
@@ -197,15 +197,15 @@ void lcd_dev_exit(void)
 	dma_channel_unclaim(lcd_dma_channel);
 
 	pwm_set_enabled(lcd_pwm_slice_num, false);
-	gpio_deinit(WAVESHARE_GEEK_LCD_BL_PIN);
+	gpio_deinit(WAVESHARE_LCD_BL_PIN);
 
-	gpio_deinit(WAVESHARE_GEEK_LCD_DC_PIN);
-	gpio_deinit(WAVESHARE_GEEK_LCD_CS_PIN);
-	gpio_deinit(WAVESHARE_GEEK_LCD_RST_PIN);
+	gpio_deinit(WAVESHARE_LCD_DC_PIN);
+	gpio_deinit(WAVESHARE_LCD_CS_PIN);
+	gpio_deinit(WAVESHARE_LCD_RST_PIN);
 
 	spi_deinit(LCD_SPI);
-	gpio_deinit(WAVESHARE_GEEK_LCD_SCLK_PIN);
-	gpio_deinit(WAVESHARE_GEEK_LCD_TX_PIN);
+	gpio_deinit(WAVESHARE_LCD_SCLK_PIN);
+	gpio_deinit(WAVESHARE_LCD_TX_PIN);
 }
 
 /*
@@ -247,7 +247,7 @@ static void __not_in_flash_func(lcd_dma_irq_handler)(void)
 		/* DMA transfer done doesn't mean that the SPI FIFO is empty */
 		while (spi_is_busy(LCD_SPI))
 			tight_loop_contents();
-		gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 1);
+		gpio_put(WAVESHARE_LCD_CS_PIN, 1);
 		lcd_dma_active = false;
 	}
 }
@@ -283,8 +283,8 @@ void __not_in_flash_func(lcd_dev_send_pixmap)(draw_pixmap_t *pixmap)
 	lcd_dev_send_word(y);
 	lcd_dev_send_word(y + pixmap->height - 1);
 	lcd_dev_send_cmd(0x2c);		/* Memory Write */
-	gpio_put(WAVESHARE_GEEK_LCD_DC_PIN, 1);
-	gpio_put(WAVESHARE_GEEK_LCD_CS_PIN, 0);
+	gpio_put(WAVESHARE_LCD_DC_PIN, 1);
+	gpio_put(WAVESHARE_LCD_CS_PIN, 0);
 	lcd_dma_active = true;
 	dma_channel_transfer_from_buffer_now(lcd_dma_channel, pixmap->bits,
 					     (uint32_t) pixmap->stride *

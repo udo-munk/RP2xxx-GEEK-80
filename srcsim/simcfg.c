@@ -40,6 +40,7 @@
 #include "simcfg.h"
 
 #include "disks.h"
+#include "gpio.h"
 #include "lcd.h"
 #include "picosim.h"
 
@@ -141,8 +142,8 @@ void config(void)
 	}
 
 	/* Create a real-time clock structure and initiate this */
-	ds3231_init(i2c_default, PICO_DEFAULT_I2C_SDA_PIN,
-		    PICO_DEFAULT_I2C_SCL_PIN, &rtc);
+	ds3231_init(__CONCAT(i2c, WAVESHARE_I2CADC_I2C),
+		    WAVESHARE_I2CADC_SDA_PIN, WAVESHARE_I2CADC_SCL_PIN, &rtc);
 
 	/* Use a dummy read to see if a DS3231 RTC is present */
 	if (i2c_read_blocking(rtc.i2c_port, rtc.i2c_addr, &buf, 1,
@@ -165,9 +166,6 @@ void config(void)
 	ts.tv_sec = mktime(&t);
 	ts.tv_nsec = 0;
 	aon_timer_start(&ts);
-#if PICO_RP2040
-	sleep_us(64);
-#endif
 
 	lcd_brightness(brightness);
 	lcd_set_rotation(rotated);
@@ -307,9 +305,6 @@ void config(void)
 				ds3231_set_datetime(&dt, &rtc);
 				ts.tv_sec = mktime(&t);
 				aon_timer_set_time(&ts);
-#if PICO_RP2040
-				sleep_us(64);
-#endif
 			}
 			putchar('\n');
 			break;
@@ -338,9 +333,6 @@ void config(void)
 				ds3231_set_datetime(&dt, &rtc);
 				ts.tv_sec = mktime(&t);
 				aon_timer_set_time(&ts);
-#if PICO_RP2040
-				sleep_us(64);
-#endif
 			}
 			putchar('\n');
 			break;
