@@ -353,7 +353,8 @@ static void prts_out(BYTE data)
 static void prtd_out(BYTE data)
 {
 #if LIB_STDIO_MSC_USB
-	if (tud_cdc_n_connected(STDIO_MSC_USB_PRINTER_ITF)) {
+	if ((data != '\r') && (data != 0x00) &&
+	    tud_cdc_n_connected(STDIO_MSC_USB_PRINTER_ITF)) {
 		if (!tud_cdc_n_write_available(STDIO_MSC_USB_PRINTER_ITF))
 			tud_cdc_n_write_flush(STDIO_MSC_USB_PRINTER_ITF);
 		tud_cdc_n_write_char(STDIO_MSC_USB_PRINTER_ITF, data);
