@@ -37,11 +37,16 @@ operating systems:
 
 - CP/M 2.2
 - CP/M 3 banked, so with all features enabled
+- MP/M II baked with two terminals, this is Z80 only
 - UCSD p-System IV
 - FIG Forth 8080 using drive 1 as block device, so true operating system
 
-All implemented operating systems use 8080 instructions only, so it is
+All implemented operating systems other than MP/M use 8080 instructions only, so it is
 possible to switch CPU's anytime, even 'on the fly'.
+It is possible to implement MP/M on the 8080 also, but requires self modifying code,
+because the 8080 lacks various indirekt memory and port addressing. The DRI MP/M
+manuals include example code for 8080, for me it is less elegant and not very
+interesting, but feel free to try your self.
 
 The LCD can show several stati of the virtual machine, the initial
 shown display can be set in the configuration. Also the displays
