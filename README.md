@@ -47,6 +47,8 @@ It is possible to implement MP/M on the 8080 also, but requires self modifying c
 because the 8080 lacks various indirekt memory and port addressing. The DRI MP/M
 manuals include example code for 8080, for me it is less elegant and not very
 interesting, but feel free to try your self.
+Also MP/M will work on the RP2350-GEEK only, the VM provides 7 user memory
+segments and the RP2040-GEEK doesn't have enough memory for this.
 
 The LCD can show several stati of the virtual machine, the initial
 shown display can be set in the configuration. Also the displays
