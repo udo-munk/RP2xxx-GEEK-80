@@ -37,7 +37,7 @@ operating systems:
 
 - CP/M 2.2
 - CP/M 3 banked, so with all features enabled
-- MP/M II banked with two terminals, this is Z80 only
+- MP/M II banked with two terminals, this is Z80 and RP2350-GEEK only
 - UCSD p-System IV
 - FIG Forth 8080 using drive 1 as block device, so true operating system
 
