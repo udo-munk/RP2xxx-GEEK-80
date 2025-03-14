@@ -17,7 +17,8 @@ z80pack on the RP2xxx GEEK devices emulates a Intel 8080 / Zilog Z80 system
 from ca. 1976 with the following components:
 
 - 8080 and Z80 CPU, switchable
-- 112 KB RAM, two banks with 48 KB and a common segment with 16 KB
+- 112 (352) KB RAM, two banks with 48 KB and a common segment with 16 KB on
+  RP2040 and seven banks with 48 KB and a common 16 KB segment on RP2350
 - 256 bytes boot ROM with power on jump in upper most memory page
 - MITS Altair 88SIO Rev. 1 for serial communication with a terminal, runs
   over USB and the serial UART
