@@ -610,9 +610,11 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 	} else {
 		/* draw dynamic content */
 
-		p = (uint32_t *) bnk0;
+		p = (uint32_t *) membnk[0];
 		for (x = MEM_XOFF + MEM_BRDR;
 		     x < MEM_XOFF + MEM_BRDR + 128; x++) {
+			if (p == (uint32_t *) membnk[1])
+				p = (uint32_t *) memcom;
 			for (y = MEM_YOFF + MEM_BRDR;
 			     y < MEM_YOFF + MEM_BRDR + 128; y++) {
 				/* constant = 2^32 / ((1 + sqrt(5)) / 2) */
@@ -624,7 +626,7 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 			}
 		}
 
-		p = (uint32_t *) bnk1;
+		p = (uint32_t *) membnk[1];
 		for (x = MEM_XOFF + 3 * MEM_BRDR - 1 + 128;
 		     x < MEM_XOFF + 3 * MEM_BRDR - 1 + 128 + 96; x++) {
 			for (y = MEM_YOFF + MEM_BRDR;

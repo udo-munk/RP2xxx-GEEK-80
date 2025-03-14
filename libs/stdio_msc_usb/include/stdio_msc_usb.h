@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
- * Copyright (c) 2024 Thomas Eberhardt
+ * Copyright (c) 2024-2025 Thomas Eberhardt
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -137,7 +137,9 @@
 extern "C" {
 #endif
 
+#if !STDIO_MSC_USB_DISABLE_STDIO
 extern stdio_driver_t stdio_msc_usb;
+#endif
 
 /*! \brief Explicitly initialize USB stdio and add it to the current set of stdin drivers
  *  \ingroup stdio_msc_usb

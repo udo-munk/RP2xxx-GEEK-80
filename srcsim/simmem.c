@@ -2,6 +2,7 @@
  * Z80SIM  -  a Z80-CPU simulator
  *
  * Copyright (C) 2024 by Udo Munk
+ * Copyright (C) 2025 by Thomas Eberhardt
  *
  * This module implements the memory for the Z80/8080 CPU.
  *
@@ -10,6 +11,7 @@
  * 09-JUN-2024 implemented boot ROM
  * 28-JUN-2024 added second memory bank
  * 29-JUN-2024 implemented banked memory
+ * 12-MAR-2025 added more memory banks for RP2350
  */
 
 #include <stdlib.h>
@@ -18,10 +20,10 @@
 #include "simdefs.h"
 #include "simmem.h"
 
-/* 64KB bank 0 + common segment */
-BYTE __aligned(4) bnk0[65536];
-/* 48KB bank 1 */
-BYTE __aligned(4) bnk1[49152];
+/* common memory segment */
+BYTE __aligned(4) memcom[65536 - SEGSIZ];
+/* NUMSEG memory banks of size SEGSIZ */
+BYTE __aligned(4) membnk[NUMSEG][SEGSIZ];
 /* selected bank */
 BYTE selbnk;
 
@@ -31,17 +33,20 @@ BYTE selbnk;
 
 void init_memory(void)
 {
-	register int i;
+	register int i, j;
 
 	/* copy boot ROM into write protected top memory page */
 	for (i = 0; i < MEMSIZE; i++)
-		bnk0[0xff00 + i] = code[i];
+		memcom[0xff00 + i - SEGSIZ] = code[i];
 
 	/* trash memory like in a real machine after power on */
-	for (i = 0; i < 0xff00; i++)
-		bnk0[i] = rand() % 256;
-	for (i = 0; i < 0xc000; i++)
-		bnk1[i] = rand() % 256;
+	for (i = SEGSIZ; i < 0xff00; i++)
+		memcom[i - SEGSIZ] = rand() % 256;
+	for (j = 0; j < NUMSEG; j++)
+		for (i = 0; i < SEGSIZ; i++)
+			membnk[j][i] = rand() % 256;
+
+	selbnk = 0;
 }
 
 void reset_memory(void)
