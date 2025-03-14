@@ -218,6 +218,7 @@ int main(void)
 	run_cpu();
 #endif
 
+	exit_io();		/* stop I/O devices */
 	exit_disks();		/* stop disk drives */
 
 #ifndef WANT_ICE

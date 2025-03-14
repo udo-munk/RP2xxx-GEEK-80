@@ -624,7 +624,7 @@ static void __not_in_flash_func(lcd_draw_memory)(bool first)
 			}
 		}
 
-		p = (uint32_t *) bnk1;
+		p = (uint32_t *) bnks[0];
 		for (x = MEM_XOFF + 3 * MEM_BRDR - 1 + 128;
 		     x < MEM_XOFF + 3 * MEM_BRDR - 1 + 128 + 96; x++) {
 			for (y = MEM_YOFF + MEM_BRDR;
