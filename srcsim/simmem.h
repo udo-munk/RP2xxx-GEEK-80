@@ -27,14 +27,14 @@
 #endif
 
 #if PICO_RP2350
-#define NUMSEG 7
+#define NUMSEG 6
 #else
-#define NUMSEG 2
+#define NUMSEG 1
 #endif
 #define SEGSIZ 49152
 
-extern BYTE memcom[65536 - SEGSIZ], membnk[NUMSEG][SEGSIZ];
-extern BYTE selbnk;
+extern BYTE bnk0[65536], bnks[NUMSEG][SEGSIZ];
+extern BYTE selbnk, *curbnk;
 
 extern void init_memory(void), reset_memory(void);
 
@@ -61,11 +61,11 @@ static inline void memwrt(WORD addr, BYTE data)
 		hb_trig = HB_WRITE;
 #endif
 
-	if (addr >= SEGSIZ) {
+	if ((selbnk == 0) || (addr >= SEGSIZ)) {
 		if (addr < 0xff00)
-			memcom[addr - SEGSIZ] = data;
+			bnk0[addr] = data;
 	} else {
-		membnk[selbnk][addr] = data;
+		curbnk[addr] = data;
 	}
 }
 
@@ -85,10 +85,10 @@ static inline BYTE memrdr(WORD addr)
 	}
 #endif
 
-	if (addr >= SEGSIZ)
-		data = memcom[addr - SEGSIZ];
+	if ((selbnk == 0) || (addr >= SEGSIZ))
+		data = bnk0[addr];
 	else
-		data = membnk[selbnk][addr];
+		data = curbnk[addr];
 
 #ifdef BUS_8080
 	cpu_bus &= ~CPU_M1;
@@ -108,20 +108,20 @@ static inline BYTE memrdr(WORD addr)
  */
 static inline void dma_write(WORD addr, BYTE data)
 {
-	if (addr >= SEGSIZ) {
+	if ((selbnk == 0) || (addr >= SEGSIZ)) {
 		if (addr < 0xff00)
-			memcom[addr - SEGSIZ] = data;
+			bnk0[addr] = data;
 	} else {
-		membnk[selbnk][addr] = data;
+		curbnk[addr] = data;
 	}
 }
 
 static inline BYTE dma_read(WORD addr)
 {
-	if (addr >= SEGSIZ)
-		return memcom[addr - SEGSIZ];
+	if ((selbnk == 0) || (addr >= SEGSIZ))
+		return bnk0[addr];
 	else
-		return membnk[selbnk][addr];
+		return curbnk[addr];
 }
 
 /*
@@ -129,20 +129,20 @@ static inline BYTE dma_read(WORD addr)
  */
 static inline void putmem(WORD addr, BYTE data)
 {
-	if (addr >= SEGSIZ) {
+	if ((selbnk == 0) || (addr >= SEGSIZ)) {
 		if (addr < 0xff00)
-			memcom[addr - SEGSIZ] = data;
+			bnk0[addr] = data;
 	} else {
-		membnk[selbnk][addr] = data;
+		curbnk[addr] = data;
 	}
 }
 
 static inline BYTE getmem(WORD addr)
 {
-	if (addr >= SEGSIZ)
-		return memcom[addr - SEGSIZ];
+	if ((selbnk == 0) || (addr >= SEGSIZ))
+		return bnk0[addr];
 	else
-		return membnk[selbnk][addr];
+		return curbnk[addr];
 }
 
 #endif /* !SIMMEM_INC */

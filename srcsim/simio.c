@@ -263,7 +263,7 @@ static BYTE prtd_in(void)
  */
 static BYTE mmu_in(void)
 {
-	return ((NUMSEG - 1) << 4) | selbnk;
+	return (NUMSEG << 4) | selbnk;
 }
 
 /*
@@ -369,7 +369,7 @@ static void prtd_out(BYTE data)
  */
 static void mmu_out(BYTE data)
 {
-	if (selbnk >= NUMSEG) {
+	if (selbnk > NUMSEG) {
 		LOGE(TAG, "%04x: trying to select non-existing bank %d",
 		     PC, data);
 		cpu_error = IOERROR;
@@ -377,6 +377,8 @@ static void mmu_out(BYTE data)
 		return;
 	}
 	selbnk = data;
+	if (selbnk != 0)
+		curbnk = bnks[selbnk - 1];
 }
 
 /*

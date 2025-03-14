@@ -20,12 +20,12 @@
 #include "simdefs.h"
 #include "simmem.h"
 
-/* common memory segment */
-BYTE __aligned(4) memcom[65536 - SEGSIZ];
+/* 64KB bank 0 + common segment */
+BYTE __aligned(4) bnk0[65536];
 /* NUMSEG memory banks of size SEGSIZ */
-BYTE __aligned(4) membnk[NUMSEG][SEGSIZ];
+BYTE __aligned(4) bnks[NUMSEG][SEGSIZ];
 /* selected bank */
-BYTE selbnk;
+BYTE selbnk, *curbnk;
 
 /* boot ROM code */
 #define MEMSIZE 256
@@ -37,14 +37,16 @@ void init_memory(void)
 
 	/* copy boot ROM into write protected top memory page */
 	for (i = 0; i < MEMSIZE; i++)
-		memcom[0xff00 + i - SEGSIZ] = code[i];
+		bnk0[0xff00 + i] = code[i];
 
 	/* trash memory like in a real machine after power on */
-	for (i = SEGSIZ; i < 0xff00; i++)
-		memcom[i - SEGSIZ] = rand() % 256;
-	for (j = 0; j < NUMSEG; j++)
+	for (i = 0; i < 0xff00; i++)
+		bnk0[i] = rand() % 256;
+	for (j = 0; j < NUMSEG; j++) {
+		curbnk = bnks[j];
 		for (i = 0; i < SEGSIZ; i++)
-			membnk[j][i] = rand() % 256;
+			curbnk[i] = rand() % 256;
+	}
 
 	selbnk = 0;
 }
