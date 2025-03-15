@@ -149,7 +149,7 @@ this with connecting a Pico probe to the UART.
 
 Also we can use the second UART now for using a MP/M multiuser system with two terminals:
 
-![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/MPM.jpg "running MP/M")
+![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/MPM.png "running MP/M")
 
 Another feature one might be missing, if just using the prebuild firmware is,
 that z80pack also contains a Mostek In Circuit Emulator (ICE). In the builds
