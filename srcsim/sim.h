@@ -37,7 +37,7 @@
 #endif
 
 #define USR_COM "Waveshare " MODEL " Z80/8080 emulator"
-#define USR_REL "1.6"
+#define USR_REL "1.7"
 #define USR_CPR "Copyright (C) 2024-2025 by Udo Munk & Thomas Eberhardt"
 
 #ifndef PRIu64

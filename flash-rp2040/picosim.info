@@ -2,7 +2,7 @@ File picosim.uf2 family ID 'rp2040':
 
 Program Information
  name:              z80pack picosim
- version:           1.6
+ version:           1.7
  web site:          https://github.com/udo-munk/RP2xxx-GEEK-80
  description:       z80pack on Waveshare RP2040-GEEK
  features:          UART stdin / stdout
@@ -20,7 +20,7 @@ Build Information
  sdk version:       2.1.1
  pico_board:        waveshare_rp2040_geek
  boot2_name:        boot2_w25q080
- build date:        Mar 14 2025
+ build date:        Mar 15 2025
  build attributes:  Release
 
 Metadata Blocks
