@@ -147,7 +147,7 @@ this with connecting a Pico probe to the UART.
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/terminal.jpg "Pico probe terminal")
 
-Also we can use the second UART now for using a MP/M multiuser system with two terminals:
+Also we can use the second UART now for running a MP/M multiuser system with two terminals:
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/MPM.png "running MP/M")
 
