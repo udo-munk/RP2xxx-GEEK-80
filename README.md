@@ -67,7 +67,7 @@ And of course Cromemco Dazzler:
 
 here playing 8080 Microchess for example.
 
-It even can a MP/M multiuser system with two terminals on the RP2350-GEEK:
+The RP2350-GEEK even can run a MP/M multiuser system with two terminals:
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/MPM.png "running MP/M")
 
