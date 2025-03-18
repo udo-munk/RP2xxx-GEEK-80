@@ -146,7 +146,7 @@ time/date informations from it.
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/RTC.jpg "battery backed RTC")
 
-The serial UART is enabled, so that one can connect a terminal. I tested
+In releases before 1.7 the serial UART is enabled, so that one can connect a terminal. I tested
 this with connecting a Pico probe to the UART.
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/terminal.jpg "Pico probe terminal")
