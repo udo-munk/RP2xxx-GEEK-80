@@ -67,6 +67,10 @@ And of course Cromemco Dazzler:
 
 here playing 8080 Microchess for example.
 
+It even can a MP/M multiuser system with two terminals on the RP2350-GEEK:
+
+![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/MPM.png "running MP/M")
+
 # History
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/8080-CPU.png "Intel 8080 CPU")
@@ -146,10 +150,6 @@ The serial UART is enabled, so that one can connect a terminal. I tested
 this with connecting a Pico probe to the UART.
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/terminal.jpg "Pico probe terminal")
-
-Also we can use the second UART now for running a MP/M multiuser system with two terminals:
-
-![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/MPM.png "running MP/M")
 
 Another feature one might be missing, if just using the prebuild firmware is,
 that z80pack also contains a Mostek In Circuit Emulator (ICE). In the builds
