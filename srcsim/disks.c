@@ -33,7 +33,7 @@
 
 FIL sd_file;	/* at any time we have only one file open */
 FRESULT sd_res;	/* result code from FatFS */
-char disks[NUMDISK][DISKLEN]; /* path name for 4 disk images /DISKS80/filename.DSK */
+char disks[NUMDISK][DISKLEN+1]; /* path name for 4 disk images /DISKS80/filename.DSK */
 
 static FATFS fs; /* FatFs on MicroSD */
 
@@ -196,7 +196,7 @@ void check_disks(void)
  */
 void mount_disk(int drive, const char *name)
 {
-	char SFN[DISKLEN];
+	char SFN[DISKLEN+1];
 	int i;
 
 	strcpy(SFN, "/DISKS80/");

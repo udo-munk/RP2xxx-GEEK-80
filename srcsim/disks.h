@@ -1,13 +1,14 @@
 /*
  * Z80SIM  -  a Z80-CPU simulator
  *
- * Copyright (C) 2024 by Udo Munk & Thomas Eberhardt
+ * Copyright (C) 2024-2025 by Udo Munk & Thomas Eberhardt
  *
  * This module implements the disks drives and low level
  * access functions for MicroSD, needed by the FDC.
  *
  * History:
  * 29-JUN-2024 split of from memsim.c and picosim.c
+ * 26-APR-2025 use a define for filename lenght
  */
 
 #ifndef DISKS_INC
@@ -18,12 +19,13 @@
 
 #include "ff.h"
 
-#define NUMDISK	4	/* number of disk drives */
-#define DISKLEN	22	/* path length for disk drives /DISKS80/filename.DSK */
+#define NUMDISK	4		/* number of disk drives */
+#define FNLEN	8		/* length of filename without extension */
+#define DISKLEN	9 + FNLEN + 4	/* path length for disk drives /DISKS80/filename.DSK */
 
 extern FIL sd_file;
 extern FRESULT sd_res;
-extern char disks[NUMDISK][DISKLEN];
+extern char disks[NUMDISK][DISKLEN+1];
 
 extern void init_disks(void), exit_disks(void);
 extern void list_files(const char *dir, const char *ext);
