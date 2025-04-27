@@ -134,7 +134,7 @@ bool load_file(const char *name)
 	bool res;
 	register unsigned int j;
 	unsigned int br;
-	char SFN[25];
+	char SFN[DISKLEN+1];
 
 	strcpy(SFN, "/CODE80/");
 	strcat(SFN, name);
