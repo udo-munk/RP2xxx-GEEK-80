@@ -22,6 +22,7 @@
 #define NUMDISK	4		/* number of disk drives */
 #define FNLEN	8		/* length of filename without extension */
 #define DISKLEN	9 + FNLEN + 4	/* path length for disk drives /DISKS80/filename.DSK */
+				/* also used for code files /CODE80/filename.BIN */
 
 extern FIL sd_file;
 extern FRESULT sd_res;
