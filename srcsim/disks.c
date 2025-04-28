@@ -113,8 +113,6 @@ void list_files(const char *dir, const char *ext)
 	if (res == FR_OK) {
 		while (true) {
 			printf("%-" STR(FNLEN) "s\t", fno.fname);
-			if (strlen(fno.fname) < FNLEN)
-				putchar('\t');
 			i++;
 			if (i > cols) {
 				putchar('\n');
