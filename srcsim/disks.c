@@ -101,16 +101,22 @@ void list_files(const char *dir, const char *ext)
 	DIR dp;
 	FILINFO fno;
 	FRESULT res;
+	int cols = 80 / (FNLEN + 8) - 1;
 	register int i = 0;
+
+	/* convert to string */
+	#define STR_(X) #X
+	/* this makes sure the argument is expanded before converting to string */
+	#define STR(X) STR_(X)
 
 	res = f_findfirst(&dp, &fno, dir, ext);
 	if (res == FR_OK) {
 		while (true) {
-			printf("%s\t", fno.fname);
-			if (strlen(fno.fname) < 8)
+			printf("%" STR(FNLEN) "s\t", fno.fname);
+			if (strlen(fno.fname) < FNLEN)
 				putchar('\t');
 			i++;
-			if (i > 4) {
+			if (i > cols) {
 				putchar('\n');
 				i = 0;
 			}
