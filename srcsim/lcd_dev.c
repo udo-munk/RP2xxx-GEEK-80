@@ -109,8 +109,12 @@ void lcd_dev_init(uint8_t backlight)
 	 */
 
 	/* SPI Config for LCD controller */
-	/* 41.67 MHz on 125 MHz RP2040, 50 MHz on 150 MHz RP2350 */
+	/* 50 MHz on 200 MHz RP2040, 50 MHz on 150 MHz RP2350 */
+#if PICO_RP2040
+	spi_init(LCD_SPI, clock_get_hz(clk_sys) / 4);
+#else
 	spi_init(LCD_SPI, clock_get_hz(clk_sys) / 3);
+#endif
 	gpio_set_function(WAVESHARE_LCD_SCLK_PIN, GPIO_FUNC_SPI);
 	gpio_set_function(WAVESHARE_LCD_TX_PIN, GPIO_FUNC_SPI);
 

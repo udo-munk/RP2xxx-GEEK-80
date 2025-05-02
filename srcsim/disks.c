@@ -49,7 +49,7 @@ static sd_sdio_if_t sdio_if = {
 	.DMA_IRQ_num = DMA_IRQ_0,
 #if PICO_RP2040
 	//.baud_rate = 125 * 1000 * 1000 / 8,	/* 15.625 MHz */
-	.baud_rate = 125 * 1000 * 1000 / 6,	/* 20.833333 MHz */
+	.baud_rate = 200 * 1000 * 1000 / 8,	/* 25.00 MHz */
 #endif
 #if PICO_RP2350
 	//.baud_rate = 150 * 1000 * 1000 / 8,	/* 18.75 MHz */
