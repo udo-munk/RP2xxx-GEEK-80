@@ -190,6 +190,12 @@ int main(void)
 #endif
 	printf("%s\n\n", USR_CPR);
 
+#ifdef WANT_ICE
+	/* if ICE compiled in print some hints */
+	puts("ICE is compiled in and starts with g command");
+	puts("For help type ? at the ICE prompt\n");
+#endif
+
 	init_cpu();		/* initialize CPU */
 	PC = 0xff00;		/* power on jump into the boot ROM */
 	init_disks();		/* initialize disk drives */
