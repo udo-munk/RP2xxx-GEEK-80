@@ -21,3 +21,17 @@ ucsd2.dsk	- UCSD p-System system disk 2 for 8080 (NOT bootable)
 ucsdint.dsk	- UCSD p-System interpreter, used to reconfigure system
 		  (NOT bootable)
 ucsdgame.dsk	- UCSD p-System games with sources (NOT bootable)
+
+
+The disk images are in IBM 3740 format, the diskdef for cpmtools is:
+
+diskdef ibm-3740
+  seclen 128
+  tracks 77
+  sectrk 26
+  blocksize 1024
+  maxdir 64
+  skew 6
+  boottrk 2
+  os 2.2
+end
