@@ -54,6 +54,7 @@
 #include "gpio.h"
 #include "lcd.h"
 #include "picosim.h"
+#include "debug.h"
 
 #ifdef WANT_ICE
 static void picosim_ice_cmd(char *cmd, WORD *wrk_addr);
@@ -135,6 +136,7 @@ int main(void)
 				    "DS3231 I2C SDA",
 				    WAVESHARE_I2CADC_SCL_PIN,
 				    "DS3231 I2C SCL"));
+	bi_decl(bi_1pin_with_name(2, "DEBUG TX"));
 
 	stdio_init_all();	/* initialize stdio */
 #if LIB_STDIO_MSC_USB
@@ -152,6 +154,9 @@ int main(void)
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
 	adc_select_input(4);
+
+	/* initialize UART for the DEBUG port */
+	debug_init();
 
 #if LIB_PICO_STDIO_UART
 	uart_inst_t *my_uart = uart_default;
@@ -173,6 +178,11 @@ int main(void)
 #endif
 		sleep_ms(100);
 	}
+#endif
+
+#define DEBUG80
+#ifdef DEBUG80
+	debug_puts("Testing debug output to DEBUG port");
 #endif
 
 	/* print banner */

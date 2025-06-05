@@ -44,6 +44,7 @@ add_executable(${PROJECT_NAME}
 	simcfg.c
 	simio.c
 	simmem.c
+	debug.c
 	${Z80PACK}/iodevices/rtc80.c
 	${Z80PACK}/iodevices/sd-fdc.c
 	${Z80PACK}/z80core/sim8080.c
@@ -59,6 +60,9 @@ add_executable(${PROJECT_NAME}
 	${Z80PACK}/z80core/simz80-fd.c
 	${Z80PACK}/z80core/simz80-fdcb.c
 )
+
+# generate the header file into the source tree
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/uart_tx.pio)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_SOURCE_DIR}
