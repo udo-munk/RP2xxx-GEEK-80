@@ -1,12 +1,12 @@
 /*
  * Z80SIM  -  a Z80-CPU simulator
  *
- * Copyright (C) 2025 by Udo Munk & Thomas Eberhardt
+ * Copyright (C) 2025 by Udo Munk
  *
  * This module implements a TX UART on the DEBUG port, GP 2 is TX.
  *
  * History:
- * 06-JUN-2025 implemented first release of Z80 emulation
+ * 06-JUN-2025 first implementation
  */
 
 #include "pico/stdlib.h"
