@@ -136,7 +136,7 @@ int main(void)
 				    "DS3231 I2C SDA",
 				    WAVESHARE_I2CADC_SCL_PIN,
 				    "DS3231 I2C SCL"));
-	bi_decl(bi_1pin_with_name(2, "DEBUG TX"));
+	bi_decl(bi_1pin_with_name(WAVESHARE_DEBUG_TX_PIN, "DEBUG TX"));
 
 	stdio_init_all();	/* initialize stdio */
 #if LIB_STDIO_MSC_USB
