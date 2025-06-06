@@ -133,14 +133,6 @@ static BYTE sio1s_in(void)
 {
 	register BYTE stat = 0b10000001; /* initially not ready */
 
-#if LIB_PICO_STDIO_UART
-	uart_inst_t *my_uart = uart_default;
-
-	if (uart_is_writable(my_uart))	/* check if output to UART is possible */
-		stat &= 0b01111111;	/* if so flip status bit */
-	if (uart_is_readable(my_uart))	/* check if there is input from UART */
-		stat &= 0b11111110;	/* if so flip status bit */
-#endif
 #if LIB_PICO_STDIO_USB
 	if (tud_cdc_connected()) {
 		/* check if output to CDC is possible */
@@ -172,12 +164,6 @@ static BYTE sio1d_in(void)
 {
 	bool input_avail = false;
 
-#if LIB_PICO_STDIO_UART
-	uart_inst_t *my_uart = uart_default;
-
-	if (uart_is_readable(my_uart))
-		input_avail = true;
-#endif
 #if LIB_PICO_STDIO_USB
 	if (tud_cdc_connected() && tud_cdc_available())
 		input_avail = true;
@@ -307,7 +293,7 @@ static void led_out(BYTE data)
 }
 
 /*
- *	Write byte to Pico UART or USB Console CDC.
+ *	Write byte to Pico USB Console CDC.
  */
 static void sio1d_out(BYTE data)
 {
