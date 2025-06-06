@@ -123,6 +123,13 @@ If you don't want to build it yourself, the directories flash-rp2040,
 flash-rp2350-arm-s, and flash-rp2350-riscv contain the
 current build, flash `picosim.uf2` into the device.
 
+The latest sources also have a bit debugging support, one can write
+debug messages to the DEBUG GPIO 2 pin of the device. For using this
+you need to connect the RX pin of a Pico Probe or some other
+Serial/USB converter to the DEBUG pin labeled GP2.
+Then add -D DEBUG80=1 to one of the above shown cmake commands to
+enable it.
+
 # Preparing MicroSD card
 
 In the root directory of the card create these directories:
