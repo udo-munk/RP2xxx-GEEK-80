@@ -3,7 +3,8 @@
  *
  * Copyright (C) 2025 by Udo Munk & Thomas Eberhardt
  *
- * This module implements a TX UART on the DEBUG port, GP 2 is TX.
+ * This module implements a TX UART on the DEBUG port, GP 2 is TX,
+ * and stdio compatible functions debug_* to print on this port.
  *
  * History:
  * 06-JUN-2025 implemented first release of Z80 emulation
@@ -13,9 +14,9 @@
 #include "hardware/pio.h"
 #include "uart_tx.pio.h"
 
+#include "gpio.h"
 #include "debug.h"
 
-#define PIN_TX		2	/* pin of DEBUG port used for serial TX */
 #define SERIAL_BAUD	115200	/* baud rate we use */
 
 /* PIO and sm we use */
@@ -33,7 +34,7 @@ void debug_init(void)
 
 	/* setup the GPIO as TX UART */
 	uint offset = pio_add_program(pio, &uart_tx_program);
-	uart_tx_program_init(pio, sm, offset, PIN_TX, SERIAL_BAUD);
+	uart_tx_program_init(pio, sm, offset, WAVESHARE_DEBUG_TX_PIN, SERIAL_BAUD);
 }
 
 /*

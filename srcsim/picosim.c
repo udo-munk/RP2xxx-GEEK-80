@@ -180,9 +180,8 @@ int main(void)
 	}
 #endif
 
-#define DEBUG80
 #ifdef DEBUG80
-	debug_puts("Testing debug output to DEBUG port");
+	debug_puts("Debugging is enabled, output send to DEBUG port");
 #endif
 
 	/* print banner */

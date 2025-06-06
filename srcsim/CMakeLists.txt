@@ -103,6 +103,11 @@ else()
 		CONF_FILE="GEEK2350.DAT"
 	)
 endif()
+if(DEBUG80)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE
+		DEBUG80=1
+	)
+endif()
 
 # compiler diagnostic options
 if(PICO_C_COMPILER_IS_GNU)

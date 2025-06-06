@@ -1,7 +1,7 @@
 /*
  * Z80SIM  -  a Z80-CPU simulator
  *
- * Copyright (C) 2025 by Thomas Eberhardt
+ * Copyright (C) 2025 by Thomas Eberhardt & Udo Munk
  */
 
 #ifndef GPIO_INC
@@ -19,6 +19,10 @@
 #endif
 #ifndef WAVESHARE_I2CADC_SCL_PIN
 #define WAVESHARE_I2CADC_SCL_PIN 29
+#endif
+
+#ifndef WAVESHARE_DEBUG_TX_PIN
+#define WAVESHARE_DEBUG_TX_PIN 2
 #endif
 
 #ifndef WAVESHARE_LCD_WIDTH
