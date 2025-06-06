@@ -159,6 +159,7 @@ int main(void)
 	debug_init();
 
 #if LIB_PICO_STDIO_UART
+	/* initialize boards default UART */
 	uart_inst_t *my_uart = uart_default;
 	/* destroy random input from UART after activation */
 	if (uart_is_readable(my_uart))
