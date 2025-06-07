@@ -256,7 +256,7 @@ static BYTE sio3d_in(void)
 		input_avail = true;
 
 	if (input_avail)
-		sio1_last = uart_getc(my_uart);
+		sio3_last = uart_getc(my_uart);
 
 	return sio3_last;
 }
