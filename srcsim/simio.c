@@ -323,9 +323,9 @@ static void sio2d_out(BYTE data)
 		if (!tud_cdc_n_write_available(STDIO_MSC_USB_CONSOLE2_ITF))
 			tud_cdc_n_write_flush(STDIO_MSC_USB_CONSOLE2_ITF);
 		if (cons_data_bits == 7)
-			tud_cdc_n_write_char(STDIO_MSC_USB_CONSOLE2_ITF, data);
-		else
 			tud_cdc_n_write_char(STDIO_MSC_USB_CONSOLE2_ITF, data & 0x7f);
+		else
+			tud_cdc_n_write_char(STDIO_MSC_USB_CONSOLE2_ITF, data);
 		tud_cdc_n_write_flush(STDIO_MSC_USB_CONSOLE2_ITF);
 	}
 #else
