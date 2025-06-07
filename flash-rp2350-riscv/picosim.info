@@ -5,17 +5,16 @@ Program Information
  version:             1.7
  web site:            https://github.com/udo-munk/RP2xxx-GEEK-80
  description:         z80pack on Waveshare RP2350-GEEK
- features:            UART stdin / stdout
-                      USB stdin / stdout
+ features:            USB stdin / stdout
  binary start:        0x10000000
- binary end:          0x1005dee8
+ binary end:          0x1005dd58
  target chip:         RP2350
  image type:          RISC-V
 
 Fixed Pin Information
  2:                   DEBUG TX
- 4:                   UART1 TX
- 5:                   UART1 RX
+ 4:                   UART TX
+ 5:                   UART RX
  28:                  DS3231 I2C SDA
  29:                  DS3231 I2C SCL
 
@@ -28,13 +27,13 @@ Build Information
 
 Metadata Block 1
  address:             0x10000014
- next block address:  0x1005ded4
+ next block address:  0x1005dd44
  block type:          image def
  target chip:         RP2350
  image type:          RISC-V
  entry point:         EP 0x10000036, SP 0x20082000
 
 Metadata Block 2
- address:             0x1005ded4
+ address:             0x1005dd44
  next block address:  0x10000014
  block type:          ignored
