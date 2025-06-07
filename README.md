@@ -153,10 +153,13 @@ time/date informations from it.
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/RTC.jpg "battery backed RTC")
 
-In releases before 1.7 the serial UART is enabled, so that one can connect a terminal. I tested
-this with connecting a Pico probe to the UART.
+For experimenting with the serial UART one can connect a Pico Probe to the UART port, like this:
 
 ![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/terminal.jpg "Pico probe terminal")
+
+Or use some USB to serial adapter, like this one:
+
+![image](https://github.com/udo-munk/RP2xxx-GEEK-80/blob/main/resources/usb-ser.jpg "USB to serial adapter")
 
 Another feature one might be missing, if just using the prebuild firmware is,
 that z80pack also contains a Mostek In Circuit Emulator (ICE). In the builds
