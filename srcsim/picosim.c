@@ -137,6 +137,10 @@ int main(void)
 				    WAVESHARE_I2CADC_SCL_PIN,
 				    "DS3231 I2C SCL"));
 	bi_decl(bi_1pin_with_name(WAVESHARE_DEBUG_TX_PIN, "DEBUG TX"));
+	bi_decl(bi_2pins_with_names(PICO_DEFAULT_UART_TX_PIN,
+				    "UART TX",
+				    PICO_DEFAULT_UART_RX_PIN,
+				    "UART RX"));
 
 #if LIB_STDIO_MSC_USB
 	sd_init_driver();	/* initialize SD card driver */
