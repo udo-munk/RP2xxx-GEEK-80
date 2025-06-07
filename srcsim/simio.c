@@ -17,6 +17,7 @@
  * 29-JUN-2024 implemented banked memory
  * 12-MAR-2025 added more memory banks for RP2350, 60 Hz timer, SIO2 & printer
  * 07-JUN-2025 configurable 7/8 bit console output
+ * 07-JUN-2025 added another SIO for the serial UART
  */
 
 /* Raspberry SDK includes */
@@ -49,15 +50,18 @@ static const char *TAG = "IO";
  *	for all port addresses.
  */
 static BYTE sio1s_in(void), sio1d_in(void), sio2s_in(void), sio2d_in(void);
+static BYTE sio3s_in(void), sio3d_in(void);
 static BYTE prts_in(void), prtd_in(void), mmu_in(void), timer_in(void);
 static BYTE hwctl_in(void), fpsw_in(void);
 static void led_out(BYTE data), sio1d_out(BYTE data), sio2s_out(BYTE data);
 static void sio2d_out(BYTE data), prts_out(BYTE data), prtd_out(BYTE data);
+static void sio3s_out(BYTE data), sio3d_out(BYTE data);
 static void mmu_out(BYTE data), timer_out(BYTE data), hwctl_out(BYTE data);
 static void fpsw_out(BYTE data), fpled_out(BYTE data);
 
 static BYTE sio1_last;	/* last character received on SIO1 */
 static BYTE sio2_last;	/* last character received on SIO2 */
+static BYTE sio3_last;	/* last character received on SIO3 */
        BYTE fp_value;	/* port 255 value, can be set from ICE or config() */
 static bool timer;	/* 60 Hz timer enabled flag */
 static BYTE hwctl_lock = 0xff; /* lock status hardware control port */
@@ -75,6 +79,8 @@ in_func_t *const port_in[256] = {
 	[  4] = fdc_in,		/* FDC status */
 	[  5] = prts_in,	/* printer status */
 	[  6] = prtd_in,	/* printer read data */
+	[  7] = sio3s_in,	/* SIO3 status */
+	[  8] = sio3d_in,	/* SIO3 read data */
 	[ 14] = dazzler_flags_in, /* Cromemco Dazzler flags */
 	[ 64] = mmu_in,		/* MMU */
 	[ 65] = clkc_in,	/* RTC read clock command */
@@ -97,6 +103,8 @@ out_func_t *const port_out[256] = {
 	[  4] = fdc_out,	/* FDC command */
 	[  5] = prts_out,	/* printer write status */
 	[  6] = prtd_out,	/* printer write data */
+	[  7] = sio3s_out,	/* SIO3 write status */
+	[  8] = sio3d_out,	/* SIO3 write data */
 	[ 14] = dazzler_ctl_out, /* Cromemco Dazzler control */
 	[ 15] = dazzler_format_out, /* Cromemco Dazzler format */
 	[ 64] = mmu_out,	/* MMU */
@@ -220,6 +228,45 @@ static BYTE sio2d_in(void)
 }
 
 /*
+ *	I/O handler for read SIO3 (serial UART) status.
+ */
+static BYTE sio3s_in(void)
+{
+	register BYTE stat = 0b10000001; /* initially not ready */
+
+#if LIB_PICO_STDIO_UART
+	uart_inst_t *my_uart = uart_default;
+
+	if (uart_is_writable(my_uart))	/* check if output to UART is possible */
+		stat &= 0b01111111;	/* if so flip status bit */
+	if (uart_is_readable(my_uart))	/* check if there is input from UART */
+		stat &= 0b11111110;	/* if so flip status bit */
+#endif
+
+	return stat;
+}
+
+/*
+ *	I/O handler for read SIO3 (serial UART) data.
+ */
+static BYTE sio3d_in(void)
+{
+	bool input_avail = false;
+
+#if LIB_PICO_STDIO_UART
+	uart_inst_t *my_uart = uart_default;
+
+	if (uart_is_readable(my_uart))
+		input_avail = true;
+#endif
+
+	if (input_avail)
+		sio1_last = getchar();
+
+	return sio3_last;
+}
+
+/*
  *	I/O handler for read printer (USB Printer CDC) status:
  */
 static BYTE prts_in(void)
@@ -331,6 +378,25 @@ static void sio2d_out(BYTE data)
 #else
 	UNUSED(data);
 #endif
+}
+
+/*
+ *	Write SIO3 status (no function).
+ */
+static void sio3s_out(BYTE data)
+{
+	UNUSED(data);
+}
+
+/*
+ *	Write SIO3 (serial UART) data.
+ */
+static void sio3d_out(BYTE data)
+{
+	if (cons_data_bits == 7)
+		putchar_raw((int) data & 0x7f); /* strip parity, some software won't */
+	else
+		putchar_raw((int) data);
 }
 
 /*
