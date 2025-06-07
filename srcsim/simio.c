@@ -127,7 +127,7 @@ void exit_io(void)
 }
 
 /*
- *	I/O handler for read SIO1 (Pico UART or USB Console CDC) status:
+ *	I/O handler for read SIO1 (Pico USB Console CDC) status:
  *	bit 0 = 0, character available for input from tty
  *	bit 7 = 0, transmitter ready to write character to tty
  */
@@ -160,7 +160,7 @@ static BYTE sio1s_in(void)
 }
 
 /*
- *	I/O handler for read SIO1 (Pico UART or USB Console CDC) data.
+ *	I/O handler for read SIO1 (Pico USB Console CDC) data.
  */
 static BYTE sio1d_in(void)
 {
