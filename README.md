@@ -23,7 +23,7 @@ from ca. 1976 with the following components:
 - four MITS Altair 88SIO Rev. 1 for serial communication with terminals,
   printers, modems, whatever, runs over USB and the serial UART
 - DMA floppy disk controller
-- four standard single density 8" IBM compatible floppy disk drives
+- four standard single density 8" IBM 3740 compatible floppy disk drives
 - Cromemco Dazzler graphics board with output on the LCD
 
 Disk images, standalone programs and virtual machine  configuration are saved
