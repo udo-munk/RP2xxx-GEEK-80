@@ -2,7 +2,7 @@ File picosim.uf2 family ID 'rp2350-riscv':
 
 Program Information
  name:                z80pack picosim
- version:             1.7
+ version:             1.8
  web site:            https://github.com/udo-munk/RP2xxx-GEEK-80
  description:         z80pack on Waveshare RP2350-GEEK
  features:            USB stdin / stdout
