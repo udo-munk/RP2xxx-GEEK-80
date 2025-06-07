@@ -258,10 +258,10 @@ static BYTE sio3d_in(void)
 
 	if (uart_is_readable(my_uart))
 		input_avail = true;
-#endif
 
 	if (input_avail)
-		sio1_last = getchar();
+		sio1_last = uart_getc(my_uart);
+#endif
 
 	return sio3_last;
 }
@@ -393,10 +393,12 @@ static void sio3s_out(BYTE data)
  */
 static void sio3d_out(BYTE data)
 {
+	uart_inst_t *my_uart = uart_default;
+
 	if (cons_data_bits == 7)
-		putchar_raw((int) data & 0x7f); /* strip parity, some software won't */
+		uart_putc(my_uart, (int) data & 0x7f); /* strip parity, some software won't */
 	else
-		putchar_raw((int) data);
+		uart_putc(my_uart, (int) data);
 }
 
 /*

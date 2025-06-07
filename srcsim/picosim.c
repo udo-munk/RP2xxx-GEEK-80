@@ -138,7 +138,6 @@ int main(void)
 				    "DS3231 I2C SCL"));
 	bi_decl(bi_1pin_with_name(WAVESHARE_DEBUG_TX_PIN, "DEBUG TX"));
 
-	stdio_init_all();	/* initialize stdio */
 #if LIB_STDIO_MSC_USB
 	sd_init_driver();	/* initialize SD card driver */
 	tusb_init();		/* initialize TinyUSB */
@@ -159,11 +158,13 @@ int main(void)
 	debug_init();
 
 #if LIB_PICO_STDIO_UART
-	/* initialize boards default UART */
+	/* initialize serial UART */
 	uart_inst_t *my_uart = uart_default;
-	/* destroy random input from UART after activation */
-	if (uart_is_readable(my_uart))
-		getchar();
+	/* initialize UART with a baud rate of 115200 */
+	uart_init(my_uart, 115200);
+	/* set the UART pins */
+	gpio_set_function(PICO_DEFAULT_UART_TX_PIN, GPIO_FUNC_UART);
+	gpio_set_function(PICO_DEFAULT_UART_RX_PIN, GPIO_FUNC_UART);
 #endif
 
 	/* when using USB UART wait until it is connected */
