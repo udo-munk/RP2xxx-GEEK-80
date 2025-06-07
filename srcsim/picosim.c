@@ -157,7 +157,6 @@ int main(void)
 	/* initialize UART for the DEBUG port */
 	debug_init();
 
-#if LIB_PICO_STDIO_UART
 	/* initialize serial UART */
 	uart_inst_t *my_uart = uart_default;
 	/* initialize UART with a baud rate of 115200 */
@@ -165,7 +164,6 @@ int main(void)
 	/* set the UART pins */
 	gpio_set_function(PICO_DEFAULT_UART_TX_PIN, GPIO_FUNC_UART);
 	gpio_set_function(PICO_DEFAULT_UART_RX_PIN, GPIO_FUNC_UART);
-#endif
 
 	/* when using USB UART wait until it is connected */
 #if LIB_PICO_STDIO_USB || (LIB_STDIO_MSC_USB && !STDIO_MSC_USB_DISABLE_STDIO)

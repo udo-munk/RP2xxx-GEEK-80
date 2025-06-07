@@ -234,14 +234,12 @@ static BYTE sio3s_in(void)
 {
 	register BYTE stat = 0b10000001; /* initially not ready */
 
-#if LIB_PICO_STDIO_UART
 	uart_inst_t *my_uart = uart_default;
 
 	if (uart_is_writable(my_uart))	/* check if output to UART is possible */
 		stat &= 0b01111111;	/* if so flip status bit */
 	if (uart_is_readable(my_uart))	/* check if there is input from UART */
 		stat &= 0b11111110;	/* if so flip status bit */
-#endif
 
 	return stat;
 }
@@ -252,8 +250,6 @@ static BYTE sio3s_in(void)
 static BYTE sio3d_in(void)
 {
 	bool input_avail = false;
-
-#if LIB_PICO_STDIO_UART
 	uart_inst_t *my_uart = uart_default;
 
 	if (uart_is_readable(my_uart))
@@ -261,7 +257,6 @@ static BYTE sio3d_in(void)
 
 	if (input_avail)
 		sio1_last = uart_getc(my_uart);
-#endif
 
 	return sio3_last;
 }
