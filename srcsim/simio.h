@@ -13,6 +13,7 @@
 #define IO_DATA_UNUSED	0xff	/* data returned on unused ports */
 
 extern BYTE fp_value;
+extern int cons_data_bits;
 
 extern in_func_t *const port_in[256];
 extern out_func_t *const port_out[256];

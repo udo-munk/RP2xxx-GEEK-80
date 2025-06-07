@@ -13,6 +13,7 @@
  * 28-MAY-2024 implemented mount/unmount of disk images
  * 03-JUN-2024 added directory list for code files and disk images
  * 31-AUG-2024 read date/time from an optional I2C battery backed RTC
+ * 07-JUN-2025 added option for 7/8 bit output to consoles
  */
 
 #include <stdlib.h>
@@ -117,6 +118,7 @@ void config(void)
 		f_read(&sd_file, &rotated, sizeof(rotated), &br);
 		f_read(&sd_file, &initial_lcd, sizeof(initial_lcd), &br);
 		f_read(&sd_file, &t, sizeof(t), &br);
+		f_read(&sd_file, &cons_data_bits, sizeof(cons_data_bits), &br);
 		f_read(&sd_file, &disks[0], DISKLEN+1, &br);
 		f_read(&sd_file, &disks[1], DISKLEN+1, &br);
 		f_read(&sd_file, &disks[2], DISKLEN+1, &br);
@@ -227,6 +229,7 @@ void config(void)
 				puts("unlimited");
 			else
 				printf("%d MHz\n", speed);
+			printf("o - console output bits: %i\n", cons_data_bits);
 			printf("p - Port 255 value: %02XH\n", fp_value);
 			printf("f - list files\n");
 			printf("r - load file\n");
@@ -366,6 +369,11 @@ void config(void)
 				speed = i;
 			break;
 
+		case 'o':
+			cons_data_bits = get_int("console data bits,", " either 7 or 8", 7, 8);
+			putchar('\n');
+			break;
+
 		case 'p':
 again:
 			printf("Enter value in Hex: ");
@@ -439,6 +447,7 @@ again:
 		f_write(&sd_file, &rotated, sizeof(rotated), &br);
 		f_write(&sd_file, &initial_lcd, sizeof(initial_lcd), &br);
 		f_write(&sd_file, &t, sizeof(t), &br);
+		f_write(&sd_file, &cons_data_bits, sizeof(cons_data_bits), &br);
 		f_write(&sd_file, &disks[0], DISKLEN+1, &br);
 		f_write(&sd_file, &disks[1], DISKLEN+1, &br);
 		f_write(&sd_file, &disks[2], DISKLEN+1, &br);

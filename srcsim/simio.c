@@ -16,6 +16,7 @@
  * 24-JUN-2024 added emulation of Cromemco Dazzler
  * 29-JUN-2024 implemented banked memory
  * 12-MAR-2025 added more memory banks for RP2350, 60 Hz timer, SIO2 & printer
+ * 07-JUN-2025 configurable 7/8 bit console output
  */
 
 /* Raspberry SDK includes */
@@ -60,6 +61,7 @@ static BYTE sio2_last;	/* last character received on SIO2 */
        BYTE fp_value;	/* port 255 value, can be set from ICE or config() */
 static bool timer;	/* 60 Hz timer enabled flag */
 static BYTE hwctl_lock = 0xff; /* lock status hardware control port */
+int cons_data_bits = 7;	/* output to consoles is 7 or 8 bits */
 
 /*
  *	This array contains function pointers for every input
@@ -297,7 +299,10 @@ static void led_out(BYTE data)
  */
 static void sio1d_out(BYTE data)
 {
-	putchar_raw((int) data & 0x7f); /* strip parity, some software won't */
+	if (cons_data_bits == 7)
+		putchar_raw((int) data & 0x7f); /* strip parity, some software won't */
+	else
+		putchar_raw((int) data);
 }
 
 /*
@@ -317,7 +322,10 @@ static void sio2d_out(BYTE data)
 	if (tud_cdc_n_connected(STDIO_MSC_USB_CONSOLE2_ITF)) {
 		if (!tud_cdc_n_write_available(STDIO_MSC_USB_CONSOLE2_ITF))
 			tud_cdc_n_write_flush(STDIO_MSC_USB_CONSOLE2_ITF);
-		tud_cdc_n_write_char(STDIO_MSC_USB_CONSOLE2_ITF, data);
+		if (cons_data_bits == 7)
+			tud_cdc_n_write_char(STDIO_MSC_USB_CONSOLE2_ITF, data);
+		else
+			tud_cdc_n_write_char(STDIO_MSC_USB_CONSOLE2_ITF, data & 0x7f);
 		tud_cdc_n_write_flush(STDIO_MSC_USB_CONSOLE2_ITF);
 	}
 #else
