@@ -249,13 +249,9 @@ static BYTE sio3s_in(void)
  */
 static BYTE sio3d_in(void)
 {
-	bool input_avail = false;
 	uart_inst_t *my_uart = uart_default;
 
 	if (uart_is_readable(my_uart))
-		input_avail = true;
-
-	if (input_avail)
 		sio3_last = uart_getc(my_uart);
 
 	return sio3_last;
