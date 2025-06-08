@@ -35,3 +35,20 @@ diskdef ibm-3740
   boottrk 2
   os 2.2
 end
+
+
+Additional notes:
+
+If you boot the MP/M II disk, it will boot CP/M 2.2 and to start MP/M use
+the command mpmldr. One can make MP/M bootable directly by writing boot
+code and mpmldr to the system tracks, the MP/M documentation explains
+how to do this. For developers a system booting into CP/M first is much
+more handy, because you need CP/M to assemble a modified BIOS and sysgen
+MP/M. Also it is possible to run MP/M under control of some debugger like
+DDT or SID from CP/M, to find some problem, see manuals.
+
+Also FIG Forth will boot into CP/M 2.2 and then you run it from there.
+Almost all implementations for 8080/Z80 use CP/M as host OS, because
+then it runs on every system with a working CP/M. Native Forth versions
+must match the hardware exactly and won't work on a slightly different
+system, without porting work.
