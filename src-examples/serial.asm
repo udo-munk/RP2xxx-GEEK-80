@@ -9,6 +9,10 @@
 CR	EQU	13			; carriage return
 LF	EQU	10			; line feed
 
+;
+; ports defined are for the first USB console, change to 7 and 8
+; for communication over the serial UART
+;
 TTYSTA	EQU	0			; tty status port
 TTYDAT	EQU	1			; tty data port
 

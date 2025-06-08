@@ -12,70 +12,74 @@ LOC   OBJECT CODE   LINE   STMT SOURCE CODE
 000d  =                9      9 CR	EQU	13			; carriage return
 000a  =               10     10 LF	EQU	10			; line feed
                       11     11
-0000  =               12     12 TTYSTA	EQU	0			; tty status port
-0001  =               13     13 TTYDAT	EQU	1			; tty data port
-                      14     14
-0000  f3              15     15 	DI				; disable interrupts
-0001  31 8d 00        16     16 	LD	SP,STACK		; setup stack in upper memory
-                      17     17
-                      18     18 					; print instructions
-0004  21 35 00        19     19 	LD	HL,TEXT			; HL points to text to send
-0007  7e              20     20 LOOP:	LD	A,(HL)			; get next character into A
-0008  b7              21     21 	OR	A			; is it 0 termination?
-0009  28 06           22     22 	JR	Z,ECHO			; if yes done
-000b  cd 2b 00        23     23 	CALL	OUTCH			; output character to tty
-000e  23              24     24 	INC	HL			; point to next character
-000f  18 f6           25     25 	JR	LOOP			; and again
-                      26     26
-                      27     27 					; now echo what is typed
-0011  db 00           28     28 ECHO:	IN	A,(TTYSTA)		; get tty status
-0013  0f              29     29 	RRCA
-0014  38 fb           30     30 	JR	C,ECHO			; wait if not ready
-0016  db 01           31     31 	IN	A,(TTYDAT)		; get character from tty into A
-0018  cd 2b 00        32     32 	CALL	OUTCH			; echo it
-001b  fe 58           33     33 	CP	'X'			; is it a X?
-001d  28 0b           34     34 	JR	Z,DONE			; done if so
-001f  fe 0d           35     35 	CP	CR			; is it a carriage return?
-0021  20 ee           36     36 	JR	NZ,ECHO			; no, go on
-0023  3e 0a           37     37 	LD	A,LF			; else also send line feed
-0025  cd 2b 00        38     38 	CALL	OUTCH
-0028  18 e7           39     39 	JR	ECHO			; repeat
-                      40     40
-002a  76              41     41 DONE:	HALT				; done
-                      42     42
-                      43     43 					; output character in A to tty
-002b  f5              44     44 OUTCH:	PUSH	AF			; save character in A
-002c  db 00           45     45 OUTCH1:	IN	A,(TTYSTA)		; get tty status
-002e  07              46     46 	RLCA
-002f  38 fb           47     47 	JR	C,OUTCH1		; wait if not ready
-0031  f1              48     48 	POP	AF			; get character back into A
-0032  d3 01           49     49 	OUT	(TTYDAT),A		; send character to tty
-0034  c9              50     50 	RET
-                      51     51
-0035  48 65 6c 6c     52     52 TEXT:	DEFM	"Hello from the Z80 CPU"
-0039  6f 20 66 72     52     53
-003d  6f 6d 20 74     52     54
-0041  68 65 20 5a     52     55
-0045  38 30 20 43     52     56
-0049  50 55           52     57
-004b  0d 0a           53     58 	DEFB	CR,LF
-004d  49 20 77 69     54     59 	DEFM	"I will echo what you type, type X if done"
-0051  6c 6c 20 65     54     60
-0055  63 68 6f 20     54     61
-0059  77 68 61 74     54     62
-005d  20 79 6f 75     54     63
-0061  20 74 79 70     54     64
-0065  65 2c 20 74     54     65
-0069  79 70 65 20     54     66
-006d  58 20 69 66     54     67
-0071  20 64 6f 6e     54     68
-0075  65              54     69
-0076  0d 0a 00        55     70 	DEFB	CR,LF,0
-                      56     71
-0079                  57     72 	DS	20			; space for the stack
-008d                  58     73 STACK:
-                      59     74
-008d                  60     75 	END				; of program
+                      12     12 ;
+                      13     13 ; ports defined are for the first USB console, change to 7 and 8
+                      14     14 ; for communication over the serial UART
+                      15     15 ;
+0000  =               16     16 TTYSTA	EQU	0			; tty status port
+0001  =               17     17 TTYDAT	EQU	1			; tty data port
+                      18     18
+0000  f3              19     19 	DI				; disable interrupts
+0001  31 8d 00        20     20 	LD	SP,STACK		; setup stack in upper memory
+                      21     21
+                      22     22 					; print instructions
+0004  21 35 00        23     23 	LD	HL,TEXT			; HL points to text to send
+0007  7e              24     24 LOOP:	LD	A,(HL)			; get next character into A
+0008  b7              25     25 	OR	A			; is it 0 termination?
+0009  28 06           26     26 	JR	Z,ECHO			; if yes done
+000b  cd 2b 00        27     27 	CALL	OUTCH			; output character to tty
+000e  23              28     28 	INC	HL			; point to next character
+000f  18 f6           29     29 	JR	LOOP			; and again
+                      30     30
+                      31     31 					; now echo what is typed
+0011  db 00           32     32 ECHO:	IN	A,(TTYSTA)		; get tty status
+0013  0f              33     33 	RRCA
+0014  38 fb           34     34 	JR	C,ECHO			; wait if not ready
+0016  db 01           35     35 	IN	A,(TTYDAT)		; get character from tty into A
+0018  cd 2b 00        36     36 	CALL	OUTCH			; echo it
+001b  fe 58           37     37 	CP	'X'			; is it a X?
+001d  28 0b           38     38 	JR	Z,DONE			; done if so
+001f  fe 0d           39     39 	CP	CR			; is it a carriage return?
+0021  20 ee           40     40 	JR	NZ,ECHO			; no, go on
+0023  3e 0a           41     41 	LD	A,LF			; else also send line feed
+0025  cd 2b 00        42     42 	CALL	OUTCH
+0028  18 e7           43     43 	JR	ECHO			; repeat
+                      44     44
+002a  76              45     45 DONE:	HALT				; done
+                      46     46
+                      47     47 					; output character in A to tty
+002b  f5              48     48 OUTCH:	PUSH	AF			; save character in A
+002c  db 00           49     49 OUTCH1:	IN	A,(TTYSTA)		; get tty status
+002e  07              50     50 	RLCA
+002f  38 fb           51     51 	JR	C,OUTCH1		; wait if not ready
+0031  f1              52     52 	POP	AF			; get character back into A
+0032  d3 01           53     53 	OUT	(TTYDAT),A		; send character to tty
+0034  c9              54     54 	RET
+                      55     55
+0035  48 65 6c 6c     56     56 TEXT:	DEFM	"Hello from the Z80 CPU"
+0039  6f 20 66 72     56     57
+003d  6f 6d 20 74     56     58
+0041  68 65 20 5a     56     59
+0045  38 30 20 43     56     60
+0049  50 55           56     61
+004b  0d 0a           57     62 	DEFB	CR,LF
+004d  49 20 77 69     58     63 	DEFM	"I will echo what you type, type X if done"
+0051  6c 6c 20 65     58     64
+0055  63 68 6f 20     58     65
+0059  77 68 61 74     58     66
+005d  20 79 6f 75     58     67
+0061  20 74 79 70     58     68
+0065  65 2c 20 74     58     69
+0069  79 70 65 20     58     70
+006d  58 20 69 66     58     71
+0071  20 64 6f 6e     58     72
+0075  65              58     73
+0076  0d 0a 00        59     74 	DEFB	CR,LF,0
+                      60     75
+0079                  61     76 	DS	20			; space for the stack
+008d                  62     77 STACK:
+                      63     78
+008d                  64     79 	END				; of program
 
 Symbol table
 
