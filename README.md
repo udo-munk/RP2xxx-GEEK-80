@@ -170,3 +170,7 @@ on a true Von Neumann can be a challenge, and we have tools like debuggers
 for this. The ICE can be enabled with a commented define in srcsim/sim.h,
 and gives one everything needed, like software breakpoints, hardware
 breakpoint, single step, dump of memory and CPU registers and so on.
+If a program under inspection with the ICE runs away after the g command,
+it can be stopped anytime by sending the break signal from the terminal.
+The break signal causes an interrupt on the MCU and execution returns to the
+ICE.
