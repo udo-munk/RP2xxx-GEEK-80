@@ -1,13 +1,14 @@
 ;
 ;	CP/M 3 banked BIOS for z80pack machines using SD-FDC
 ;
-;	Copyright (C) 2024 by Udo Munk
+;	Copyright (C) 2024-2025 by Udo Munk
 ;
 ; History:
 ; 03-JUL-2024 first public release
 ; 07-JUL-2024 added RTC
 ; 14-JUL-2024 fixed bug, FCB one byte short
 ; 23-JUL-2024 fixed status bug in READ/WRITE found by Thomas
+; 09-JUN-2025 implemented second console
 ;
 WARM	EQU	0		; BIOS warm start
 BDOS	EQU	5		; BDOS entry
@@ -47,6 +48,8 @@ TPA	EQU	0100H		; start of TPA
 ;
 TTY1	EQU	01H		; tty 1 data
 TTY1S	EQU	00H		; tty 1 status
+TTY2	EQU	03H		; tty 2 data
+TTY2S	EQU	02H		; tty 2 status
 FDC	EQU	04H		; FDC
 MMUSEL	EQU	40H		; MMU bank select
 CLKCMD	EQU	41H		; RTC command
@@ -197,7 +200,10 @@ DDHDMA	EQU	CMD+3		; DMA address high
 ;
 ;	character device table
 ;
-CHRTBL:	DB	'TTY1  '
+CHRTBL:	DB	'CON1  '
+	DB	mb$inou+mb$ser
+	DB	baud$0
+	DB	'CON2  '
 	DB	mb$inou+mb$ser
 	DB	baud$0
 ;
@@ -224,8 +230,8 @@ STACK:
 	DSEG
 ;
 SIGNON:	DB	13,10
-	DB	'Banked BIOS V1.3',13,10
-	DB	'Copyright (C) 2024 Udo Munk',13,10,13,10
+	DB	'Banked BIOS V1.4',13,10
+	DB	'Copyright (C) 2024-2025 Udo Munk',13,10,13,10
 	DB	0
 ;
 ;	get control from cold start loader
@@ -325,7 +331,12 @@ CONST:	LHLD	@civec		; get console in vector
 	JZ	CONS1		; if not set try next
 	CALL	TTY1IS		; test tty 1 input status
 	JZ	DEVRDY		; done if device ready
-CONS1:	XRA	A		; no device ready
+CONS1:	MVI	A,40H		; test for device 1
+	ANA	H
+	JZ	CONS2		; if not set try next
+	CALL	TTY2IS		; test tty 2 input status
+	JZ	DEVRDY		; done if device ready
+CONS2:	XRA	A		; no device ready
 	RET
 ;
 ;	console input
@@ -336,7 +347,12 @@ CONIN:	LHLD	@civec		; get console in vector
 	JZ	CONI1		; if not set try next
 	CALL	TTY1IS		; test tty 1 input status
 	JZ	TTY1IN		; ready, get input from tty 1
-CONI1:	JMP	CONIN		; no device ready, try again
+CONI1:	MVI	A,40H		; test for device 1
+	ANA	H
+	JZ	CONI2		; if not set try next
+	CALL	TTY2IS		; test tty 2 input status
+	JZ	TTY2IN		; ready, get input from tty 2
+CONI2:	JMP	CONIN		; no device ready, try again
 ;
 ;	console output status
 ;
@@ -346,7 +362,12 @@ CONOST:	LHLD	@covec		; get console out vector
 	JNZ	CONOS1		; if not set try next
 	CALL	TTY1OS		; test tty 1 output status
 	JNZ	DEVNRY		; if device not ready
-CONOS1:	MVI	A,0FFH		; all output devices ready
+CONOS1:	MVI	A,40H		; test for device 1
+	ANA	H
+	JNZ	CONOS2		; if not set try next
+	CALL	TTY2OS		; test tty 2 output status
+	JNZ	DEVNRY		; if device not ready
+CONOS2:	MVI	A,0FFH		; all output devices ready
 	RET
 ;
 ;	console output
@@ -355,6 +376,9 @@ CONOUT: LHLD	@covec		; get console out vector
 	MVI	A,80H		; test for device 0
 	ANA	H
 	CNZ	TTY1OU		; if set call tty 1 output
+	MVI	A,40H		; test for device 1
+	ANA	H
+	CNZ	TTY2OU		; if set call tty 2 output
 	RET
 ;
 ;	list output status
@@ -406,6 +430,32 @@ TTY1OU:	IN	TTY1S		; get status
 	JC	TTY1OU		; wait until transmitter ready
 	MOV	A,C		; get character to A
 	OUT	TTY1		; send to tty 1
+	RET
+;
+;	tty 2 input status
+;
+TTY2IS:	IN	TTY2S		; get status
+	ANI	01H		; mask bit
+	RET
+;
+;	tty 2 input
+;
+TTY2IN:	IN	TTY2		; get character
+	RET
+;
+;	tty 2 output status
+;
+TTY2OS:	IN	TTY2S		; get status
+	ANI	80H		; mask bit
+	RET
+;
+;	tty 2 output
+;
+TTY2OU:	IN	TTY2S		; get status
+	RLC			; test bit 7
+	JC	TTY2OU		; wait until transmitter ready
+	MOV	A,C		; get character to A
+	OUT	TTY2		; send to tty 2
 	RET
 ;
 ;	return with device ready
