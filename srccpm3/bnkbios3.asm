@@ -416,20 +416,43 @@ LIST:	RET			; no printer
 ;
 ;	auxiliary input status
 ;
-AUXIST:	JMP	DEVNRY		; no auxiliary, never ready
+AUXIST:	LHLD	@aivec		; get auxiliary in vector
+	MVI	A,20H		; test for device 2
+	ANA	H
+	JZ	AUXS1		; if not set try next
+	CALL	TTY3IS		; test tty 3 input status
+	JNZ	DEVRDY		; done if device ready
+AUXS1:	XRA	A		; no device ready
+	RET
 ;
 ;	auxiliary input
 ;
-AUXIN:	MVI	A,01AH		; we have no auxiliary
-	RET			; so return CTL-Z
+AUXIN:	LHLD	@aivec		; get auxiliary in vector
+	MVI	A,20H		; test for device 2
+	ANA	H
+	JZ	AUXI1		; if not set try next
+	CALL	TTY3IS		; test tty 3 input status
+	JNZ	TTY3IN		; ready, get input from tty 3
+AUXI1:	JMP	AUXIN		; no device ready, try again
 ;
 ;	auxiliary output status
 ;
-AUXOST:	JMP	DEVNRY		; no auxiliary, never ready
+AUXOST:	LHLD	@aovec		; get auxiliary out vector
+	MVI	A,20H		; test for device 2
+	ANA	H
+	JNZ	AUXOS1		; if not set try next
+	CALL	TTY3OS		; test tty 3 output status
+	JZ	DEVNRY		; if device not ready
+AUXOS1:	MVI	A,0FFH		; all output devices ready
+	RET
 ;
 ;	auxiliary output
 ;
-AUXOUT: RET			; no auxiliary
+AUXOUT:	LHLD	@aovec		; get auxiliary out vector
+	MVI	A,20H		; test for device 2
+	ANA	H
+	CNZ	TTY3OU		; if set call tty 3 output
+	RET
 ;
 ;	tty 1 input status
 ;
