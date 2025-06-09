@@ -21,7 +21,7 @@
 #define SIMPLEPANEL	/* this machine has a simple frontpanel */
 #define IOPANEL		/* this machine has an I/O port panel */
 
-#define WANT_ICE	/* attach ICE to headless machine */
+/*#define WANT_ICE*/	/* attach ICE to headless machine */
 #ifdef WANT_ICE
 #define BAREMETAL	/* disable ICE commands that require a full OS */
 #define WANT_TIM	/* count t-states */
