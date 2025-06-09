@@ -9,6 +9,7 @@
 ; 14-JUL-2024 fixed bug, FCB one byte short
 ; 23-JUL-2024 fixed status bug in READ/WRITE found by Thomas
 ; 09-JUN-2025 implemented second console
+; 09-JUN-2025 implemented auxiliary device using serial UART
 ;
 WARM	EQU	0		; BIOS warm start
 BDOS	EQU	5		; BDOS entry
@@ -50,6 +51,8 @@ TTY1	EQU	01H		; tty 1 data
 TTY1S	EQU	00H		; tty 1 status
 TTY2	EQU	03H		; tty 2 data
 TTY2S	EQU	02H		; tty 2 status
+TTY3	EQU	08H		; tty 3 data
+TTY3S	EQU	07H		; tty 3 status
 FDC	EQU	04H		; FDC
 MMUSEL	EQU	40H		; MMU bank select
 CLKCMD	EQU	41H		; RTC command
@@ -206,6 +209,9 @@ CHRTBL:	DB	'CON1  '
 	DB	'CON2  '
 	DB	mb$inou+mb$ser
 	DB	baud$0
+	DB	'TTY1  '
+	DB	mb$inou+mb$ser
+	DB	baud$0
 ;
 	DB	0
 ;
@@ -240,11 +246,12 @@ SIGNON:	DB	13,10
 BOOT:	LXI	SP,STACK
 ;
 	LXI	H,8000H		; device 0
-	SHLD	@civec		; CONIN:=TTY1
-	SHLD	@covec		; CONOUT:=TTY1
+	SHLD	@civec		; CONIN:=CON1
+	SHLD	@covec		; CONOUT:=CON1
+	LXI	H,2000H		; device 2
+	SHLD	@aivec		; AUXIN:=TTY1
+	SHLD	@aovec		; AUXOUT:=TTY1
 	LXI	H,0
-	SHLD	@aivec		; AUXIN:=NULL
-	SHLD	@aovec		; AUXOUT:=NULL
 	SHLD	@lovec		; LST:=NULL
 ;
 	MVI	A,10H		; setup FDC command
@@ -336,7 +343,12 @@ CONS1:	MVI	A,40H		; test for device 1
 	JZ	CONS2		; if not set try next
 	CALL	TTY2IS		; test tty 2 input status
 	JZ	DEVRDY		; done if device ready
-CONS2:	XRA	A		; no device ready
+CONS2:	MVI	A,20H		; test for device 2
+	ANA	H
+	JZ	CONS3		; if not set try next
+	CALL	TTY3IS		; test tty 3 input status
+	JZ	DEVRDY		; done if device ready
+CONS3:	XRA	A		; no device ready
 	RET
 ;
 ;	console input
@@ -352,7 +364,12 @@ CONI1:	MVI	A,40H		; test for device 1
 	JZ	CONI2		; if not set try next
 	CALL	TTY2IS		; test tty 2 input status
 	JZ	TTY2IN		; ready, get input from tty 2
-CONI2:	JMP	CONIN		; no device ready, try again
+CONI2:	MVI	A,20H		; test for device 2
+	ANA	H
+	JZ	CONI3		; if not set try next
+	CALL	TTY3IS		; test tty 3 input status
+	JZ	TTY3IN		; ready, get input from tty 3
+CONI3:	JMP	CONIN		; no device ready, try again
 ;
 ;	console output status
 ;
@@ -367,7 +384,12 @@ CONOS1:	MVI	A,40H		; test for device 1
 	JNZ	CONOS2		; if not set try next
 	CALL	TTY2OS		; test tty 2 output status
 	JNZ	DEVNRY		; if device not ready
-CONOS2:	MVI	A,0FFH		; all output devices ready
+CONOS2:	MVI	A,20H		; test for device 2
+	ANA	H
+	JNZ	CONOS3		; if not set try next
+	CALL	TTY3OS		; test tty 3 output status
+	JNZ	DEVNRY		; if device not ready
+CONOS3:	MVI	A,0FFH		; all output devices ready
 	RET
 ;
 ;	console output
@@ -379,6 +401,9 @@ CONOUT: LHLD	@covec		; get console out vector
 	MVI	A,40H		; test for device 1
 	ANA	H
 	CNZ	TTY2OU		; if set call tty 2 output
+	MVI	A,20H		; test for device 2
+	ANA	H
+	CNZ	TTY3OU		; if set call tty 3 output
 	RET
 ;
 ;	list output status
@@ -456,6 +481,32 @@ TTY2OU:	IN	TTY2S		; get status
 	JC	TTY2OU		; wait until transmitter ready
 	MOV	A,C		; get character to A
 	OUT	TTY2		; send to tty 2
+	RET
+;
+;	tty 3 input status
+;
+TTY3IS:	IN	TTY3S		; get status
+	ANI	01H		; mask bit
+	RET
+;
+;	tty 3 input
+;
+TTY3IN:	IN	TTY3		; get character
+	RET
+;
+;	tty 3 output status
+;
+TTY3OS:	IN	TTY3S		; get status
+	ANI	80H		; mask bit
+	RET
+;
+;	tty 3 output
+;
+TTY3OU:	IN	TTY3S		; get status
+	RLC			; test bit 7
+	JC	TTY3OU		; wait until transmitter ready
+	MOV	A,C		; get character to A
+	OUT	TTY3		; send to tty 3
 	RET
 ;
 ;	return with device ready
