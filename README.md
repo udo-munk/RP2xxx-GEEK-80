@@ -20,8 +20,9 @@ from ca. 1976 with the following components:
 - 112 (352) KB RAM, two banks with 48 KB and a common segment with 16 KB on
   RP2040 and seven banks with 48 KB and a common 16 KB segment on RP2350
 - 256 bytes boot ROM with power on jump in upper most memory page
-- four MITS Altair 88SIO Rev. 1 for serial communication with terminals,
+- three MITS Altair 88SIO Rev. 1 for serial communication with terminals,
   printers, modems, whatever, runs over USB and the serial UART
+- an output only port for printer, runs over USB
 - DMA floppy disk controller
 - four standard single density 8" IBM 3740 compatible floppy disk drives
 - Cromemco Dazzler graphics board with output on the LCD
