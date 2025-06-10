@@ -10,6 +10,7 @@
 ; 23-JUL-2024 fixed status bug in READ/WRITE found by Thomas
 ; 09-JUN-2025 implemented second console
 ; 09-JUN-2025 implemented auxiliary device using serial UART
+; 10-JUN-2025 implemented printer device
 ;
 WARM	EQU	0		; BIOS warm start
 BDOS	EQU	5		; BDOS entry
@@ -53,6 +54,8 @@ TTY2	EQU	03H		; tty 2 data
 TTY2S	EQU	02H		; tty 2 status
 TTY3	EQU	08H		; tty 3 data
 TTY3S	EQU	07H		; tty 3 status
+PRTDAT	EQU	06H		; printer data port
+PRTSTA	EQU	05H		; printer status port
 FDC	EQU	04H		; FDC
 MMUSEL	EQU	40H		; MMU bank select
 CLKCMD	EQU	41H		; RTC command
@@ -212,6 +215,9 @@ CHRTBL:	DB	'CON1  '
 	DB	'TTY1  '
 	DB	mb$inou+mb$ser
 	DB	baud$0
+	DB	'LPT   '
+	DB	mb$out+mb$ser
+	DB	baud$0
 ;
 	DB	0
 ;
@@ -251,8 +257,8 @@ BOOT:	LXI	SP,STACK
 	LXI	H,2000H		; device 2
 	SHLD	@aivec		; AUXIN:=TTY1
 	SHLD	@aovec		; AUXOUT:=TTY1
-	LXI	H,0
-	SHLD	@lovec		; LST:=NULL
+	LXI	H,1000H		; device 3
+	SHLD	@lovec		; LST:=LPT
 ;
 	MVI	A,10H		; setup FDC command
 	OUT	FDC
@@ -408,11 +414,30 @@ CONOUT: LHLD	@covec		; get console out vector
 ;
 ;	list output status
 ;
-LISTST:	JMP	DEVNRY		; no printer, never ready
+LISTST:	LHLD	@lovec		; get list out vector
+	MVI	A,10H		; test for device 3
+	ANA	H
+	JNZ	LISTS1		; if not set try next
+	CALL	LPTST		; test line printer output status
+	JNZ	DEVNRY		; if device not ready
+LISTS1:	MVI	A,20H		; test for device 2
+	ANA	H
+	JNZ	LISTS2		; if not set try next
+	CALL	TTY3OS		; test serial tty output status
+	JNZ	DEVNRY		; if device not ready
+LISTS2:	MVI	A,0FFH		; all output devices ready
+	RET
 ;
 ;	list output
 ;
-LIST:	RET			; no printer
+LIST:	LHLD	@lovec		; get list out vector
+	MVI	A,10H		; test for device 3
+	ANA	H
+	CNZ	LPTOUT		; if set call printer out
+	MVI	A,20H		; test for device 2
+	ANA	H
+	CNZ	TTY3OU		; if set call tty 3 out
+	RET
 ;
 ;	auxiliary input status
 ;
@@ -530,6 +555,22 @@ TTY3OU:	IN	TTY3S		; get status
 	JC	TTY3OU		; wait until transmitter ready
 	MOV	A,C		; get character to A
 	OUT	TTY3		; send to tty 3
+	RET
+;
+;	lpt output status
+;
+LPTST:	;IN	PRTSTA		; get printer status
+	MVI	A,0
+	ANI	80H		; mask bit
+	RET
+;
+;	lpt output
+;
+LPTOUT:	;IN	PRTSTA		; get status
+	;RLC			; test bit 7
+	;JC	LPTOUT		; wait until transmitter ready
+	MOV	A,C		; get character to A
+	OUT	PRTDAT		; send to printer
 	RET
 ;
 ;	return with device ready
