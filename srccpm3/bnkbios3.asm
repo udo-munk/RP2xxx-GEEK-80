@@ -559,16 +559,16 @@ TTY3OU:	IN	TTY3S		; get status
 ;
 ;	lpt output status
 ;
-LPTST:	;IN	PRTSTA		; get printer status
-	MVI	A,0
-	ANI	80H		; mask bit
-	RET
+LPTST:	IN	PRTSTA		; get printer status
+	ORA	A		; is it 0 ?
+	JZ	DEVNRY		; if yes device not ready
+	JMP	DEVRDY		; else it is ready
 ;
 ;	lpt output
 ;
-LPTOUT:	;IN	PRTSTA		; get status
-	;RLC			; test bit 7
-	;JC	LPTOUT		; wait until transmitter ready
+LPTOUT:	IN	PRTSTA		; get status
+	RLC			; test bit 7
+	JNC	LPTOUT		; wait until transmitter ready
 	MOV	A,C		; get character to A
 	OUT	PRTDAT		; send to printer
 	RET
