@@ -421,7 +421,7 @@ AUXIST:	LHLD	@aivec		; get auxiliary in vector
 	ANA	H
 	JZ	AUXS1		; if not set try next
 	CALL	TTY3IS		; test tty 3 input status
-	JNZ	DEVRDY		; done if device ready
+	JZ	DEVRDY		; done if device ready
 AUXS1:	XRA	A		; no device ready
 	RET
 ;
@@ -432,7 +432,7 @@ AUXIN:	LHLD	@aivec		; get auxiliary in vector
 	ANA	H
 	JZ	AUXI1		; if not set try next
 	CALL	TTY3IS		; test tty 3 input status
-	JNZ	TTY3IN		; ready, get input from tty 3
+	JZ	TTY3IN		; ready, get input from tty 3
 AUXI1:	JMP	AUXIN		; no device ready, try again
 ;
 ;	auxiliary output status
@@ -442,7 +442,7 @@ AUXOST:	LHLD	@aovec		; get auxiliary out vector
 	ANA	H
 	JNZ	AUXOS1		; if not set try next
 	CALL	TTY3OS		; test tty 3 output status
-	JZ	DEVNRY		; if device not ready
+	JNZ	DEVNRY		; if device not ready
 AUXOS1:	MVI	A,0FFH		; all output devices ready
 	RET
 ;
