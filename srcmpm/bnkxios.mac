@@ -176,8 +176,8 @@ PTIN1:	LD	C,POLL		;poll console 1 status in
 	RET
 ;
 PTOUT1:	IN	A,(CON1STA)	;console 1 output status
-	AND	2		;ready?
-	JP	NZ,TXRDY1	;yes, output
+	AND	80H		;ready?
+	JP	Z,TXRDY1	;yes, output
 	PUSH	BC
 	LD	C,POLL		;poll console 1 status out
 	LD	E,PLCO1
