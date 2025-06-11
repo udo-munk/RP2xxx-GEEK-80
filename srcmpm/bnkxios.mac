@@ -1,11 +1,12 @@
 ;
 ;	MP/M 2 XIOS for z80pack machines using SD-FDC
 ;
-;	Copyright (C) 1989-2024 by Udo Munk
+;	Copyright (C) 1989-2025 by Udo Munk
 ;	Copyright (C) 2025 by Thomas Eberhardt
 ;
 ; History:
 ; 12-MAR-2025 first public release based on cpmsim/srcmpm and RP2xxx/srccpm3
+; 11-JUN-2025 test printer status before sending output
 ;
 NMBCNS	EQU	2		;number of consoles
 TICKPS	EQU	60		;number of ticks per second
@@ -187,8 +188,11 @@ TXRDY1:	LD	A,C		;console 1 output
 	RET
 ;
 LIST:
-	LD	A,C
-	OUT	(PRTDAT),A
+	IN	A,(PRTSTA)	;get printer status
+	OR	A		;not ready?
+	JP	Z,LIST		;wait until ready
+	LD	A,C		;get character
+	OUT	(PRTDAT),A	;and print it
 	RET
 ;
 ;	not used by MP/M 2
@@ -486,7 +490,7 @@ WAITIO: OUT	(FDC),A		;ask FDC to execute the command
 ;
 SIGNON:	DEFB	13,10
 	DEFM	'MP/M 2 XIOS V1.9, '
-	DEFM	'Copyright 1989-2024 by Udo Munk'
+	DEFM	'Copyright 1989-2025 by Udo Munk'
 	DEFM	' & 2025 by Thomas Eberhardt'
 	DEFB	13,10,0
 ;
