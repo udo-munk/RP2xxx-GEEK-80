@@ -113,7 +113,7 @@ LIST:
 	RET
 ;
 ;	return list status (00h if not ready, 0ffh if ready)
-;^
+;
 LISTST:
 	IN	A,(PRTSTA)	;get printer status
 	OR	A		;is it 0 ?
