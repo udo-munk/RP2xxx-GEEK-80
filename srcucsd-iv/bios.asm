@@ -1,7 +1,7 @@
 ;
 ;	UCSD p-System IV CBIOS for z80pack machines using SD-FDC
 ;
-;	Copyright (C) 2024 by Udo Munk
+;	Copyright (C) 2024-2025 by Udo Munk
 ;
 ;	Use 8080 instructions only.
 ;
@@ -13,6 +13,8 @@ BIOS	EQU	1500H+BIAS	;base of bios
 ;
 TTY	EQU	01H		;tty data port
 TTYS	EQU	00H		;tty status port
+PRTDAT	EQU	06H		;printer data port
+PRTSTA	EQU	05H		;printer status port
 FDC	EQU	04H		;FDC port
 ;
 ;	disk command bytes for FDC
@@ -49,8 +51,8 @@ WBOOTE: JP	WBOOT		;warm start
 ;
 ;	copyright text
 ;
-	DEFM	'62K UCSD p-System IV.0 CBIOS V1.0 for picosim, '
-	DEFM	'Copyright 2024 by Udo Munk'
+	DEFM	'62K UCSD p-System IV.0 CBIOS V1.1 for picosim, '
+	DEFM	'Copyright 2024-2025 by Udo Munk'
 	DEFB	13,10,0
 ;
 ;	individual subroutines to perform each function
@@ -103,13 +105,21 @@ CONOUT:
 ;	list character from register c
 ;
 LIST:
+	IN	A,(PRTSTA)	;get status
+	RLA			;test bit 7
+	JP	NC,LIST		;wait until transmitter ready
+	LD	A,C		;get character to A
+	OUT	(PRTDAT),A	;send to printer
 	RET
 ;
 ;	return list status (00h if not ready, 0ffh if ready)
-;
+;^
 LISTST:
-	XOR	A
-	RET
+	IN	A,(PRTSTA)	;get printer status
+	OR	A		;is it 0 ?
+	JP	Z,LISTS1	;if yes device not ready
+	LD	A,0FFH		;device ready
+LISTS1:	RET
 ;
 ;	punch character from register c
 ;
