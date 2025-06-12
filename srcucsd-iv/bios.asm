@@ -11,10 +11,12 @@ BIOS	EQU	1500H+BIAS	;base of bios
 ;
 ;	I/O ports
 ;
-TTY	EQU	01H		;tty data port
 TTYS	EQU	00H		;tty status port
-PRTDAT	EQU	06H		;printer data port
+TTY	EQU	01H		;tty data port
 PRTSTA	EQU	05H		;printer status port
+PRTDAT	EQU	06H		;printer data port
+TTY3S	EQU	07H		;tty 3 status port
+TTY3	EQU	08H		;tty 3 data port
 FDC	EQU	04H		;FDC port
 ;
 ;	disk command bytes for FDC
@@ -119,17 +121,26 @@ LISTST:
 	OR	A		;is it 0 ?
 	JP	Z,LISTS1	;if yes device not ready
 	LD	A,0FFH		;device ready
-LISTS1:	RET
+LISTS1:
+	RET
 ;
 ;	punch character from register c
 ;
 PUNCH:
+	IN	A,(TTY3S)	;get status
+	RLA			;test bit 7
+	JP	C,PUNCH		;wait until transmitter ready
+	LD	A,C		;get character to A
+	OUT	(TTY3),A	;send to tty
 	RET
 ;
 ;	read character into register a from reader device
 ;
 READER:
-	LD	A,01AH		;return EOF
+	IN	A,(TTY3S)	;get status
+	RRA			;test bit 0
+	JP	C,READER	;wait until receiver ready
+	IN	A,(TTY3)	;get character into A
 	RET
 ;
 ;
