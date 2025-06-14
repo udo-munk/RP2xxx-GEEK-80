@@ -252,7 +252,7 @@ LISTST	CALL	DISPATCH	;go to one of the physical device routines
 	DW	DEVNST		;00 - TTY:
 	DW	DEVNST		;01 - CRT:
 	DW	LPTST		;10 - LPT:
-	DW	DEVNST		;11 - UL1:
+	DW	TTY3IS		;11 - UL1:
 ;
 ;	line printer output
 ;
@@ -261,7 +261,7 @@ LIST	CALL	DISPATCH	;go to one of the physical device routines
 	DW	DEVNOU		;00 - TTY:
 	DW	DEVNOU		;01 - CRT:
 	DW	LPTOUT		;10 - LPT:
-	DW	DEVNOU		;11 - UL1:
+	DW	TTY3OU		;11 - UL1:
 ;
 ;	punch character from register C
 ;
