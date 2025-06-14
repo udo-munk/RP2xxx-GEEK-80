@@ -24,8 +24,10 @@ DDHDMA	EQU	3		;offset for DMA address high
 ;
 ;	I/O ports
 ;
-TTY1ST	EQU	0		;console status port
-TTY1DA	EQU	1		;console data port
+TTY1ST	EQU	0		;tty 1 status
+TTY1DA	EQU	1		;tty 1 data
+TTY3ST	EQU	7		;tty 3 status
+TTY3DA	EQU	8		;tty 3 data
 PRTSTA	EQU	5		;printer status port
 PRTDAT	EQU	6		;printer data port
 FDC	EQU	4		;port for the FDC
@@ -266,16 +268,16 @@ LIST	CALL	DISPATCH	;go to one of the physical device routines
 PUNCH	CALL	DISPATCH	;go to one of the physical device routines
 	DB	5		;use bits 5-4 of iobyte
 	DW	DEVNOU		;00 - TTY:
-	DW	DEVNOU		;01 - PTP:
+	DW	TTY3OU		;01 - PTP:
 	DW	DEVNOU		;10 - UP1:
 	DW	DEVNOU		;11 - UP2:
 ;
 ;	read character into register A from reader
 ;
 READER	CALL	DISPATCH	;go to one of the physical device routines
-	DB	7		;use bits 5-4 of iobyte
+	DB	7		;use bits 3-2 OF iobyte
 	DW	DEVNIN		;00 - TTY:
-	DW	DEVNIN		;01 - RDR:
+	DW	TTY3IN		;01 - RDR:
 	DW	DEVNIN		;10 - UR1:
 	DW	DEVNIN		;11 - UR2:
 ;
@@ -310,6 +312,33 @@ TTY1OU	IN	TTY1ST		;get tty 1 status
 	JC	TTY1OU		;wait until transmitter ready
 	MOV	A,C		;get character into accumulator
 	OUT	TTY1DA		;send to tty 1
+	RET
+;
+;	get tty 3 input status
+;
+TTY3IS	IN	TTY3ST		;get tty 3 status
+	RRC			;test bit 0
+	JC	TTY3I1		;not ready
+	MVI	A,0FFH		;ready, set flag
+	RET
+TTY3I1	XRA	A		;zero A
+	RET
+;
+;	get tty 3 input
+;
+TTY3IN	IN	TTY3ST		;get tty 3 status
+	RRC			;test bit 0
+	JC	TTY3IN		;not ready
+	IN	TTY3DA		;get character from tty 3
+	RET
+;
+;	tty 3 output
+;
+TTY3OU	IN	TTY3ST		;get tty 3 status
+	RLC			;test bit 7
+	JC	TTY3OU		;wait until transmitter ready
+	MOV	A,C		;get character into accumulator
+	OUT	TTY3DA		;send to tty 1
 	RET
 ;
 ;	printer status, return 0FFH if output ready, 00H if not
