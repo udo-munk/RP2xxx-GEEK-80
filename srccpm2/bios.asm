@@ -224,7 +224,7 @@ CONST	CALL	DISPATCH	;go to one of the physical device routines
 	DB	1		;use bits 1-0 of iobyte
 	DW	TTY1IS		;00 - TTY:
 	DW	DEVNST		;01 - CRT:
-	DW	DEVNST		;10 - BAT:
+	DW	TTY3IS		;10 - BAT:
 	DW	TTY3IS		;11 - UC1:
 ;
 ;	console input character into register A
@@ -233,7 +233,7 @@ CONIN	CALL	DISPATCH	;go to one of the physical device routines
 	DB	1		;use bits 1-0 of iobyte
 	DW	TTY1IN		;00 - TTY:
 	DW	DEVNIN		;01 - CRT:
-	DW	DEVNIN		;10 - BAT:
+	DW	TTY3IN		;10 - BAT:
 	DW	TTY3IN		;11 - UC1:
 ;
 ;	console output from character in register C
@@ -242,7 +242,7 @@ CONOUT	CALL	DISPATCH	;go to one of the physical device routines
 	DB	1		;use bits 1-0 of iobyte
 	DW	TTY1OU		;00 - TTY:
 	DW	DEVNOU		;01 - CRT:
-	DW	DEVNOU		;10 - BAT:
+	DW	LPTOUT		;10 - BAT:
 	DW	TTY3OU		;11 - UC1:
 ;
 ;	printer status, return 0FFH if character ready, 00H if not
