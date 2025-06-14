@@ -225,7 +225,7 @@ CONST	CALL	DISPATCH	;go to one of the physical device routines
 	DW	TTY1IS		;00 - TTY:
 	DW	DEVNST		;01 - CRT:
 	DW	DEVNST		;10 - BAT:
-	DW	DEVNST		;11 - UC1:
+	DW	TTY3IS		;11 - UC1:
 ;
 ;	console input character into register A
 ;
@@ -234,7 +234,7 @@ CONIN	CALL	DISPATCH	;go to one of the physical device routines
 	DW	TTY1IN		;00 - TTY:
 	DW	DEVNIN		;01 - CRT:
 	DW	DEVNIN		;10 - BAT:
-	DW	DEVNIN		;11 - UC1:
+	DW	TTY3IN		;11 - UC1:
 ;
 ;	console output from character in register C
 ;
@@ -243,7 +243,7 @@ CONOUT	CALL	DISPATCH	;go to one of the physical device routines
 	DW	TTY1OU		;00 - TTY:
 	DW	DEVNOU		;01 - CRT:
 	DW	DEVNOU		;10 - BAT:
-	DW	DEVNOU		;11 - UC1:
+	DW	TTY3OU		;11 - UC1:
 ;
 ;	printer status, return 0FFH if character ready, 00H if not
 ;
