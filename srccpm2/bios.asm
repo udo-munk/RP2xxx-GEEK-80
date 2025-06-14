@@ -357,10 +357,10 @@ LPTOUT	IN	PRTSTA		;get printer status
 ;
 ;	null device
 ;
-DEVNST	XRA	A		;this device is never ready
+DEVNST	MVI	A,0FFH		;this device is always ready
 	RET
 DEVNIN	MVI	A,01AH		;always returns CP/M EOF
-DEVNOU	RET			;and won't output
+DEVNOU	RET			;and won't output anywhere
 ;
 ;	move to track 0 position on current disk
 ;
