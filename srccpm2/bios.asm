@@ -1,6 +1,7 @@
-;	8080 CBIOS for z80pack machines using SD-FDC
 ;
-;	Copyright (C) 2024 by Udo Munk
+;	8080 CBIOS for z80pack picosim machines using SD-FDC
+;
+;	Copyright (C) 2024-2025 by Udo Munk
 ;
 MSIZE	EQU	64		;CP/M memory size in kilobytes
 ;
@@ -14,6 +15,7 @@ BIOS	EQU	CCP+1600H	;base of bios
 NSECTS	EQU	(BIOS-CCP)/128	;warm start sector count
 CDISK	EQU	0004H		;current disk number 0=A,...,15=P
 IOBYTE	EQU	0003H		;Intel I/O byte
+INITIO	EQU	10010100B	;CON:=TTY, RDR:=PTR:, PUN:=PTP, LST:=LPT:
 FDCCMD	EQU	0040H		;FDC command bytes
 DDTRK	EQU	0		;offset for track
 DDSEC	EQU	1		;offset for sector
@@ -22,8 +24,10 @@ DDHDMA	EQU	3		;offset for DMA address high
 ;
 ;	I/O ports
 ;
-CONSTA	EQU	0		;console status port
-CONDAT	EQU	1		;console data port
+TTY1ST	EQU	0		;console status port
+TTY1DA	EQU	1		;console data port
+PRTSTA	EQU	5		;printer status port
+PRTDAT	EQU	6		;printer data port
 FDC	EQU	4		;port for the FDC
 LEDS	EQU	0FFH		;frontpanel LED's
 ;
@@ -52,7 +56,7 @@ WBE	JMP	WBOOT		;warm start
 ;	data tables
 ;
 SIGNON	DB	MSIZE / 10 + '0',MSIZE MOD 10 + '0'
-	DB	'K CP/M 2.2 VERS B02',13,10,0
+	DB	'K CP/M 2.2 VERS B03',13,10,0
 BOOTERR	DB	13,10,'BOOT ERROR',13,10,0
 ;
 ;	disk parameter header for disk 0
@@ -116,6 +120,7 @@ BOOT	LXI	SP,80H		;use space below buffer for stack
 	XRA	A		;zero in the accumulator
 	STA	CDISK		;select disk drive 0
 	STA	DSKNO
+	MVI	A,INITIO	;initialize iobyte
 	STA	IOBYTE		;setup IOBYTE
 	MVI	A,10H		;setup FDC command
 	OUT	FDC
@@ -181,50 +186,152 @@ GOCPM	MVI	A,0C3H		;C3 is a JMP instruction
 	JC	CCP+3		;go to CCP warm start
 	JMP	CCP		;go to CCP cold start
 ;
+;***************************************************************************
+;	Logical device routines
+;
+;	These routines use the physical device routines
+;	depending on contents of iobyte.
+;***************************************************************************
+;
+;	Dispatch to one of 4 following addresses
+;	depending on contents of two bits of iobyte.
+;	Specific bits of iobyte are specified by
+;	shift count following the subroutine call.
+;
+DISPATCH
+	XTHL			;save callers HL, get table addr
+	MOV	D,M		;get shift count into D
+	INX	H		;point to table
+	LDA	IOBYTE		;get iobyte
+DSHIFT	RLC			;shift to position bits
+	DCR	D
+	JNZ	DSHIFT
+	ANI	06H		;mask bits
+	MOV	E,A		;D already clear
+	DAD	D		;index into table
+	MOV 	A,M		;get table word into HL
+	INX	H
+	MOV 	H,M
+	MOV	L,A
+	XTHL			;put addr of routine, get callers HL
+	RET			;go to routine
+;
 ;	console status, return 0FFH if character ready, 00H if not
 ;
-CONST	IN	CONSTA		;get console status
-	RRC			;test bit 0
-	JC	CONST1		;not ready
-	MVI	A,0FFH		;ready, set flag
-	RET
-CONST1	XRA	A		;zero A
-	RET
+CONST	CALL	DISPATCH	;go to one of the physical device routines
+	DB	1		;use bits 1-0 of iobyte
+	DW	TTY1IS		;00 - TTY:
+	DW	DEVNST		;01 - CRT:
+	DW	DEVNST		;10 - BAT:
+	DW	DEVNST		;11 - UC1:
 ;
 ;	console input character into register A
 ;
-CONIN	IN	CONSTA		;get console status
-	RRC			;test bit 0
-	JC	CONIN		;not ready
-	IN	CONDAT		;get character from console
-	RET
+CONIN	CALL	DISPATCH	;go to one of the physical device routines
+	DB	1		;use bits 1-0 of iobyte
+	DW	TTY1IN		;00 - TTY:
+	DW	DEVNIN		;01 - CRT:
+	DW	DEVNIN		;10 - BAT:
+	DW	DEVNIN		;11 - UC1:
 ;
-;	console output
+;	console output from character in register C
 ;
-CONOUT	IN	CONSTA		;get status
-	RLC			;test bit 7
-	JC	CONOUT		;wait until transmitter ready
-	MOV	A,C		;get character into accumulator
-	OUT	CONDAT		;send to console
-	RET
+CONOUT	CALL	DISPATCH	;go to one of the physical device routines
+	DB	1		;use bits 1-0 of iobyte
+	DW	TTY1OU		;00 - TTY:
+	DW	DEVNOU		;01 - CRT:
+	DW	DEVNOU		;10 - BAT:
+	DW	DEVNOU		;11 - UC1:
 ;
 ;	printer status, return 0FFH if character ready, 00H if not
 ;
-LISTST	XRA	A		;we have no printer
-	RET			;so never ready
+LISTST	CALL	DISPATCH	;go to one of the physical device routines
+	DB	3		;use bits 7-6 of iobyte
+	DW	DEVNST		;00 - TTY:
+	DW	DEVNST		;01 - CRT:
+	DW	LPTST		;10 - LPT:
+	DW	DEVNST		;11 - UL1:
 ;
 ;	line printer output
 ;
-LIST	RET			;we have no printer
+LIST	CALL	DISPATCH	;go to one of the physical device routines
+	DB	3		;use bits 7-6 of iobyte
+	DW	DEVNOU		;00 - TTY:
+	DW	DEVNOU		;01 - CRT:
+	DW	LPTOUT		;10 - LPT:
+	DW	DEVNOU		;11 - UL1:
 ;
 ;	punch character from register C
 ;
-PUNCH	RET			;we have no puncher
+PUNCH	CALL	DISPATCH	;go to one of the physical device routines
+	DB	5		;use bits 5-4 of iobyte
+	DW	DEVNOU		;00 - TTY:
+	DW	DEVNOU		;01 - PTP:
+	DW	DEVNOU		;10 - UP1:
+	DW	DEVNOU		;11 - UP2:
 ;
 ;	read character into register A from reader
 ;
-READER	MVI	A,01AH		;we have no reader
-	RET			;so return CTL-Z
+READER	CALL	DISPATCH	;go to one of the physical device routines
+	DB	7		;use bits 5-4 of iobyte
+	DW	DEVNIN		;00 - TTY:
+	DW	DEVNIN		;01 - RDR:
+	DW	DEVNIN		;10 - UR1:
+	DW	DEVNIN		;11 - UR2:
+;
+;***************************************************************************
+;	Physical device routines
+;
+;	Accessed via logical device routines above
+;***************************************************************************
+;
+;	get tty 1 input status
+;
+TTY1IS	IN	TTY1ST		;get tty 1 status
+	RRC			;test bit 0
+	JC	TTY1I1		;not ready
+	MVI	A,0FFH		;ready, set flag
+	RET
+TTY1I1	XRA	A		;zero A
+	RET
+;
+;	get tty 1 input
+;
+TTY1IN	IN	TTY1ST		;get tty 1 status
+	RRC			;test bit 0
+	JC	TTY1IN		;not ready
+	IN	TTY1DA		;get character from tty 1
+	RET
+;
+;	tty 1 output
+;
+TTY1OU	IN	TTY1ST		;get tty 1 status
+	RLC			;test bit 7
+	JC	TTY1OU		;wait until transmitter ready
+	MOV	A,C		;get character into accumulator
+	OUT	TTY1DA		;send to tty 1
+	RET
+;
+;	printer status, return 0FFH if output ready, 00H if not
+;
+LPTST	IN	PRTSTA		;get printer status
+	RET
+;
+;	line printer output
+;
+LPTOUT	IN	PRTSTA		;get printer status
+	ORA	A		;ready ?
+	JZ	LPTOUT		;wait if not
+	MOV	A,C		;get character into accumulator
+	OUT	PRTDAT		;send to printer
+	RET
+;
+;	null device
+;
+DEVNST	XRA	A		;this device is never ready
+	RET
+DEVNIN	MVI	A,01AH		;always returns CP/M EOF
+DEVNOU	RET			;and won't output
 ;
 ;	move to track 0 position on current disk
 ;
