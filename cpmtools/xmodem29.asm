@@ -2161,7 +2161,7 @@ TXCUST:
 CWDAT:	mvi	b,0		;Don't flush
 	call	ABORT
 	db	'No /I','1'+80h
-	db	nop
+	db	0		;nop
 
 	mov	a,c		;restore registers
 	pop	b
@@ -2190,7 +2190,7 @@ RXCUST:
 CRSTAT:	mvi	b,0		;Don't flush
 	call	ABORT
 	db	'No /I','2'+80h
-	db	nop
+	db	0		;nop
 
 	jz	WATCRX
 	pop	h
@@ -2198,18 +2198,18 @@ CRSTAT:	mvi	b,0		;Don't flush
 ;Get the received data byte
 ;(Up to 12 bytes will be written at CRDAT by /I3 here)
 
-CRDAT:	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
-	db	nop
+CRDAT:	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
+	db	0		;nop
 
 	ret
 
@@ -3390,7 +3390,7 @@ MODIO:	mov	m,e		;install status port adr
 	ora	a
 				;Code already has a JNZ
 	jz	MODIO1		;need a jz instead?
-	mvi	m,JZ		;y: install jz opcode
+	mvi	m,0CAH		;y: install jz opcode
 MODIO1:
 
 	inx	h		;point to data port loc
