@@ -90,9 +90,10 @@ everyone, as we have it today.
 
 # Building
 
-To build z80pack for this device you need to have the SDK 2.1.1 for RP2040/RP2350
-based devices installed and configured. The SDK manual has detailed
-instructions how to install on all major PC platforms, it is available here:
+To build z80pack for this device you need to have the SDK 2.1.1 or later
+for RP2040/RP2350 based devices installed and configured. The SDK manual
+has detailed instructions how to install on all major PC platforms, it is
+available here:
 [Raspberry Pi Pico Documentation](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html)
 
 Then clone the GitHub repositories:
